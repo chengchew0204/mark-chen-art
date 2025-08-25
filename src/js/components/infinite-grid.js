@@ -145,8 +145,17 @@ export default class InfiniteGrid {
     }
 
     this.items = [];
-    const repsX = [0, this.tileSize.w];
-    const repsY = [0, this.tileSize.h];
+    
+    // Adjust tile size for repeated images to maintain proper spacing
+    let adjustedTileSize = { ...this.tileSize };
+    if (this.isMobile) {
+      // Increase tile size to account for the spacing adjustments
+      adjustedTileSize.w = this.tileSize.w * 1.5; // 50% larger to accommodate spacing
+      adjustedTileSize.h = this.tileSize.h * 1.5;
+    }
+    
+    const repsX = [0, adjustedTileSize.w];
+    const repsY = [0, adjustedTileSize.h];
 
     // Create all items first
     baseItems.forEach(base => {
@@ -181,6 +190,7 @@ export default class InfiniteGrid {
           this.$container.appendChild(el);
           this.observer.observe(caption);
 
+          // Use the adjusted base positions for repeated images
           this.items.push({
             el,
             container: itemImage,
