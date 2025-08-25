@@ -224,45 +224,57 @@ export default class InfiniteGrid {
   // Function to prevent image overlaps on mobile for all items (including repeated ones)
   preventOverlapsForAllItems() {
     const minSpacing = 80; // Increased minimum spacing between images in pixels
+    let hasOverlaps = true;
+    let iterations = 0;
+    const maxIterations = 10; // Prevent infinite loops
     
-    for (let i = 0; i < this.items.length; i++) {
-      for (let j = i + 1; j < this.items.length; j++) {
-        const item1 = this.items[i];
-        const item2 = this.items[j];
-        
-        // Calculate the distance between image centers
-        const center1X = item1.x + item1.w / 2;
-        const center1Y = item1.y + item1.h / 2;
-        const center2X = item2.x + item2.w / 2;
-        const center2Y = item2.y + item2.h / 2;
-        
-        const distanceX = Math.abs(center1X - center2X);
-        const distanceY = Math.abs(center1Y - center2Y);
-        
-        // Calculate required spacing based on image sizes
-        const requiredSpacingX = (item1.w + item2.w) / 2 + minSpacing;
-        const requiredSpacingY = (item1.h + item2.h) / 2 + minSpacing;
-        
-        // If images are too close, adjust their positions
-        if (distanceX < requiredSpacingX && distanceY < requiredSpacingY) {
-          const overlapX = requiredSpacingX - distanceX;
-          const overlapY = requiredSpacingY - distanceY;
+    // Keep iterating until no overlaps are found or max iterations reached
+    while (hasOverlaps && iterations < maxIterations) {
+      hasOverlaps = false;
+      iterations++;
+      
+      for (let i = 0; i < this.items.length; i++) {
+        for (let j = i + 1; j < this.items.length; j++) {
+          const item1 = this.items[i];
+          const item2 = this.items[j];
           
-          // Move images apart
-          if (center1X < center2X) {
-            item1.x -= overlapX / 2;
-            item2.x += overlapX / 2;
-          } else {
-            item1.x += overlapX / 2;
-            item2.x -= overlapX / 2;
-          }
+          // Check if images overlap (not just centers)
+          const overlapX = Math.max(0, Math.min(item1.x + item1.w, item2.x + item2.w) - Math.max(item1.x, item2.x));
+          const overlapY = Math.max(0, Math.min(item1.y + item1.h, item2.y + item2.h) - Math.max(item1.y, item2.y));
           
-          if (center1Y < center2Y) {
-            item1.y -= overlapY / 2;
-            item2.y += overlapY / 2;
-          } else {
-            item1.y += overlapY / 2;
-            item2.y -= overlapY / 2;
+          if (overlapX > 0 && overlapY > 0) {
+            hasOverlaps = true;
+            
+            // Calculate the distance between image centers
+            const center1X = item1.x + item1.w / 2;
+            const center1Y = item1.y + item1.h / 2;
+            const center2X = item2.x + item2.w / 2;
+            const center2Y = item2.y + item2.h / 2;
+            
+            // Calculate required spacing based on image sizes
+            const requiredSpacingX = (item1.w + item2.w) / 2 + minSpacing;
+            const requiredSpacingY = (item1.h + item2.h) / 2 + minSpacing;
+            
+            // Move images apart more aggressively
+            const moveX = (requiredSpacingX - Math.abs(center1X - center2X)) * 1.2;
+            const moveY = (requiredSpacingY - Math.abs(center1Y - center2Y)) * 1.2;
+            
+            // Move images apart
+            if (center1X < center2X) {
+              item1.x -= moveX / 2;
+              item2.x += moveX / 2;
+            } else {
+              item1.x += moveX / 2;
+              item2.x -= moveX / 2;
+            }
+            
+            if (center1Y < center2Y) {
+              item1.y -= moveY / 2;
+              item2.y += moveY / 2;
+            } else {
+              item1.y += moveY / 2;
+              item2.y -= moveY / 2;
+            }
           }
         }
       }
@@ -272,45 +284,57 @@ export default class InfiniteGrid {
   // Function to prevent image overlaps on mobile for base items only
   preventOverlaps(items) {
     const minSpacing = 80; // Increased minimum spacing between images in pixels
+    let hasOverlaps = true;
+    let iterations = 0;
+    const maxIterations = 10; // Prevent infinite loops
     
-    for (let i = 0; i < items.length; i++) {
-      for (let j = i + 1; j < items.length; j++) {
-        const item1 = items[i];
-        const item2 = items[j];
-        
-        // Calculate the distance between image centers
-        const center1X = item1.x + item1.w / 2;
-        const center1Y = item1.y + item1.h / 2;
-        const center2X = item2.x + item2.w / 2;
-        const center2Y = item2.y + item2.h / 2;
-        
-        const distanceX = Math.abs(center1X - center2X);
-        const distanceY = Math.abs(center1Y - center2Y);
-        
-        // Calculate required spacing based on image sizes
-        const requiredSpacingX = (item1.w + item2.w) / 2 + minSpacing;
-        const requiredSpacingY = (item1.h + item2.h) / 2 + minSpacing;
-        
-        // If images are too close, adjust their positions
-        if (distanceX < requiredSpacingX && distanceY < requiredSpacingY) {
-          const overlapX = requiredSpacingX - distanceX;
-          const overlapY = requiredSpacingY - distanceY;
+    // Keep iterating until no overlaps are found or max iterations reached
+    while (hasOverlaps && iterations < maxIterations) {
+      hasOverlaps = false;
+      iterations++;
+      
+      for (let i = 0; i < items.length; i++) {
+        for (let j = i + 1; j < items.length; j++) {
+          const item1 = items[i];
+          const item2 = items[j];
           
-          // Move images apart
-          if (center1X < center2X) {
-            item1.x -= overlapX / 2;
-            item2.x += overlapX / 2;
-          } else {
-            item1.x += overlapX / 2;
-            item2.x -= overlapX / 2;
-          }
+          // Check if images overlap (not just centers)
+          const overlapX = Math.max(0, Math.min(item1.x + item1.w, item2.x + item2.w) - Math.max(item1.x, item2.x));
+          const overlapY = Math.max(0, Math.min(item1.y + item1.h, item2.y + item2.h) - Math.max(item1.y, item2.y));
           
-          if (center1Y < center2Y) {
-            item1.y -= overlapY / 2;
-            item2.y += overlapY / 2;
-          } else {
-            item1.y += overlapY / 2;
-            item2.y -= overlapY / 2;
+          if (overlapX > 0 && overlapY > 0) {
+            hasOverlaps = true;
+            
+            // Calculate the distance between image centers
+            const center1X = item1.x + item1.w / 2;
+            const center1Y = item1.y + item1.h / 2;
+            const center2X = item2.x + item2.w / 2;
+            const center2Y = item2.y + item2.h / 2;
+            
+            // Calculate required spacing based on image sizes
+            const requiredSpacingX = (item1.w + item2.w) / 2 + minSpacing;
+            const requiredSpacingY = (item1.h + item2.h) / 2 + minSpacing;
+            
+            // Move images apart more aggressively
+            const moveX = (requiredSpacingX - Math.abs(center1X - center2X)) * 1.2;
+            const moveY = (requiredSpacingY - Math.abs(center1Y - center2Y)) * 1.2;
+            
+            // Move images apart
+            if (center1X < center2X) {
+              item1.x -= moveX / 2;
+              item2.x += moveX / 2;
+            } else {
+              item1.x += moveX / 2;
+              item2.x -= moveX / 2;
+            }
+            
+            if (center1Y < center2Y) {
+              item1.y -= moveY / 2;
+              item2.y += moveY / 2;
+            } else {
+              item1.y += moveY / 2;
+              item2.y -= moveY / 2;
+            }
           }
         }
       }
