@@ -43,18 +43,16 @@ export default class InfiniteGrid {
 
     window.addEventListener('resize', this.onResize);
     
-    // Only add desktop event listeners if not mobile
-    if (!this.isMobile) {
-      window.addEventListener('wheel', this.onWheel, { passive: false });
-      window.addEventListener('mousemove', this.onMouseMove);
-      this.$container.addEventListener('mousedown', this.onMouseDown);
-      window.addEventListener('mouseup', this.onMouseUp);
-    } else {
-      // Add touch event listeners for mobile
-      this.$container.addEventListener('touchstart', this.onTouchStart, { passive: true });
-      this.$container.addEventListener('touchmove', this.onTouchMove, { passive: true });
-      this.$container.addEventListener('touchend', this.onTouchEnd, { passive: true });
-    }
+    // Enable both desktop and mobile interactions
+    window.addEventListener('wheel', this.onWheel, { passive: false });
+    window.addEventListener('mousemove', this.onMouseMove);
+    this.$container.addEventListener('mousedown', this.onMouseDown);
+    window.addEventListener('mouseup', this.onMouseUp);
+    
+    // Add touch event listeners for mobile
+    this.$container.addEventListener('touchstart', this.onTouchStart, { passive: false });
+    this.$container.addEventListener('touchmove', this.onTouchMove, { passive: false });
+    this.$container.addEventListener('touchend', this.onTouchEnd, { passive: true });
 
     this.observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -187,11 +185,6 @@ export default class InfiniteGrid {
   }
 
   onWheel(e) {
-    // Allow normal scrolling on mobile devices
-    if (this.isMobile) {
-      return;
-    }
-    
     e.preventDefault();
     const factor = 0.4;
     this.scroll.target.x -= e.deltaX * factor;
@@ -228,8 +221,7 @@ export default class InfiniteGrid {
   }
 
   onTouchStart(e) {
-    // Don't prevent default to allow normal touch scrolling
-    // e.preventDefault();
+    e.preventDefault();
     this.isDragging = true;
     document.documentElement.classList.add('dragging');
     this.mouse.press.t = 1;
@@ -240,8 +232,7 @@ export default class InfiniteGrid {
   }
 
   onTouchMove(e) {
-    // Don't prevent default to allow normal touch scrolling
-    // e.preventDefault();
+    e.preventDefault();
     this.mouse.x.t = e.touches[0].clientX / this.winW;
     this.mouse.y.t = e.touches[0].clientY / this.winH;
 
@@ -260,18 +251,7 @@ export default class InfiniteGrid {
   }
 
   render() {
-    // Skip custom scrolling on mobile devices
-    if (this.isMobile) {
-      // On mobile, just observe items for visibility without custom scrolling
-      this.items.forEach(item => {
-        // Reset any transforms that might interfere with normal scrolling
-        item.el.style.transform = 'none';
-        item.img.style.transform = 'none';
-      });
-      requestAnimationFrame(this.render);
-      return;
-    }
-
+    // Keep the infinite grid layout on mobile, just enable touch scrolling
     this.scroll.current.x += (this.scroll.target.x - this.scroll.current.x) * this.scroll.ease;
     this.scroll.current.y += (this.scroll.target.y - this.scroll.current.y) * this.scroll.ease;
 

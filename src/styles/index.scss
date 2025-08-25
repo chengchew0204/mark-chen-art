@@ -14,8 +14,8 @@ html {
   background: $white;
   color: $black;
   font-size: calc((1 / 1440) * 100vw);
-  // Remove overflow hidden to allow scrolling on mobile
-  // overflow: hidden;
+  // Keep overflow hidden for infinite grid scrolling
+  overflow: hidden;
   @media (max-width: 1024px) {
     font-size: 1px;
   }
@@ -32,13 +32,13 @@ body {
   margin: 0;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
-  // Remove overscroll behavior restriction for mobile
-  // overscroll-behavior-y: none;
+  // Keep overscroll behavior for infinite grid
+  overscroll-behavior-y: none;
   
   // Add proper mobile touch handling
   @media (max-width: 768px) {
     font-size: 10rem;
-    touch-action: pan-x pan-y;
+    touch-action: none; // Disable default touch actions for custom scrolling
     -webkit-overflow-scrolling: touch;
   }
 }
