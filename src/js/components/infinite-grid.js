@@ -393,26 +393,42 @@ export default class InfiniteGrid {
     const dirY = this.scroll.current.y > this.scroll.last.y ? 'down'  : 'up';
 
     this.items.forEach(item => {
-      const newX = 5 * this.scroll.delta.x.c * item.ease + (this.mouse.x.c - 0.5) * item.rect.width * 0.6;
-      const newY = 5 * this.scroll.delta.y.c * item.ease + (this.mouse.y.c - 0.5) * item.rect.height * 0.6;
-      const scrollX = this.scroll.current.x;
-      const scrollY = this.scroll.current.y;
-      const posX = item.x + scrollX + item.extraX + newX;
-      const posY = item.y + scrollY + item.extraY + newY;
+      // 1) 先算「格點」位置（不含視差），用來決定 wrap 與外層容器 transform
+      const baseX = item.x + this.scroll.current.x + item.extraX;
+      const baseY = item.y + this.scroll.current.y + item.extraY;
+
+      // 2) 視差只施加在內層 .item-image（item.container），不動外層 .item
+      //    並在手機上限制最大振幅，避免內層位移過大造成視覺重疊
+      const parallaxMax = this.isMobile
+        ? Math.min(24, 0.18 * Math.min(item.w, item.h))   // 手機：最多 ~24px 或影像短邊的 18%
+        : Math.min(60, 0.25 * Math.min(item.w, item.h));  // 桌機：放寬一些
+
+      let pX = (this.mouse.x.c - 0.5) * 2 * parallaxMax + 2.5 * this.scroll.delta.x.c * item.ease;
+      let pY = (this.mouse.y.c - 0.5) * 2 * parallaxMax + 2.5 * this.scroll.delta.y.c * item.ease;
+
+      // clamp
+      pX = Math.max(-parallaxMax, Math.min(parallaxMax, pX));
+      pY = Math.max(-parallaxMax, Math.min(parallaxMax, pY));
+
+      // 3) wrap 判斷只用 baseX/baseY（外層格點不受視差影響）
+      const posX = baseX;
+      const posY = baseY;
 
       const beforeX = posX > this.winW;
-      const afterX = posX + item.rect.width < 0;
+      const afterX  = posX + item.rect.width < 0;
       if (dirX === 'right' && beforeX) item.extraX -= this.tileSize.w;
-      if (dirX === 'left' && afterX) item.extraX += this.tileSize.w;
+      if (dirX === 'left'  && afterX)  item.extraX += this.tileSize.w;
 
       const beforeY = posY > this.winH;
-      const afterY = posY + item.rect.height < 0;
+      const afterY  = posY + item.rect.height < 0;
       if (dirY === 'down' && beforeY) item.extraY -= this.tileSize.h;
-      if (dirY === 'up' && afterY) item.extraY += this.tileSize.h;
+      if (dirY === 'up'   && afterY)  item.extraY += this.tileSize.h;
 
-      const fx = item.x + scrollX + item.extraX + newX;
-      const fy = item.y + scrollY + item.extraY + newY;
-      item.el.style.transform = `translate(${fx}px, ${fy}px)`;
+      // 4) 外層 .item 只負責格點定位；內層 .item-image 做視差
+      item.el.style.transform        = `translate(${baseX}px, ${baseY}px)`;
+      item.container.style.transform = `translate(${pX}px, ${pY}px)`;
+
+      // 5) 你原本的 img 視覺效果可保留（縮放＋微移），其位移是相對於 item.container 的，不會造成格點互撞
       item.img.style.transform = `scale(${1.2 + 0.2 * this.mouse.press.c * item.ease}) translate(${-this.mouse.x.c * item.ease * 10}%, ${-this.mouse.y.c * item.ease * 10}%)`;
     });
 
