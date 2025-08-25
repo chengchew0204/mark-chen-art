@@ -118,46 +118,45 @@ export default class InfiniteGrid {
 
     this.$container.innerHTML = '';
 
+    // Create all items first
     const baseItems = this.data.map((d, i) => {
       const scaleX = this.tileSize.w / this.originalSize.w;
       const scaleY = this.tileSize.h / this.originalSize.h;
       const source = this.sources[i % this.sources.length];
-      
-      // Add extra spacing on mobile to make images less crowded
-      let spacingMultiplier = 1;
-      if (this.isMobile) {
-        spacingMultiplier = 2.2; // 120% more spacing between images to reduce crowding
-      }
-      
+
+      // Extra spacing on mobile to reduce density
+      const spacingMultiplier = this.isMobile ? 2.2 : 1;
+
       return {
         src: source.src,
         caption: source.caption,
-        x:   d.x * scaleX * spacingMultiplier,
-        y:   d.y * scaleY * spacingMultiplier,
-        w:   d.w * scaleX,
-        h:   d.h * scaleY
+        x: d.x * scaleX * spacingMultiplier,
+        y: d.y * scaleY * spacingMultiplier,
+        w: d.w * scaleX,
+        h: d.h * scaleY
       };
     });
 
-    // Prevent overlaps on mobile by adjusting positions
+    // --- NEW: robust, periodic no-overlap layout computed ONLY on the base tile ---
     if (this.isMobile) {
-      this.preventOverlaps(baseItems);
+      // pixels; feel free to tweak
+      const baseSpacing = 80;
+      const cellSize = Math.max(96, Math.min(this.tileSize.w, this.tileSize.h) * 0.12);
+      this.relaxNoOverlapPeriodic(baseItems, this.tileSize.w, this.tileSize.h, {
+        iterations: 18,
+        cellSize,
+        spacing: baseSpacing,
+        sizeAware: true
+      });
     }
 
     this.items = [];
-    
-    // Adjust tile size for repeated images to maintain proper spacing
-    let adjustedTileSize = { ...this.tileSize };
-    if (this.isMobile) {
-      // Increase tile size to account for the spacing adjustments
-      adjustedTileSize.w = this.tileSize.w * 1.5; // 50% larger to accommodate spacing
-      adjustedTileSize.h = this.tileSize.h * 1.5;
-    }
-    
-    const repsX = [0, adjustedTileSize.w];
-    const repsY = [0, adjustedTileSize.h];
 
-    // Create all items first
+    // IMPORTANT: reps are aligned to the base tile size (periodic tiling)
+    const repsX = [0, this.tileSize.w];
+    const repsY = [0, this.tileSize.h];
+
+    // Create DOM for items (2x2 tiling)
     baseItems.forEach(base => {
       repsX.forEach(offsetX => {
         repsY.forEach(offsetY => {
@@ -190,7 +189,6 @@ export default class InfiniteGrid {
           this.$container.appendChild(el);
           this.observer.observe(caption);
 
-          // Use the adjusted base positions for repeated images
           this.items.push({
             el,
             container: itemImage,
@@ -209,11 +207,7 @@ export default class InfiniteGrid {
       });
     });
 
-    // Apply overlap prevention to all items on mobile (including repeated ones)
-    if (this.isMobile) {
-      this.preventOverlapsForAllItems();
-    }
-
+    // Double the tile after replicating to 2x2 (keep your original wrap logic)
     this.tileSize.w *= 2;
     this.tileSize.h *= 2;
 
@@ -221,123 +215,98 @@ export default class InfiniteGrid {
     this.scroll.current.y = this.scroll.target.y = this.scroll.last.y = -this.winH * 0.1;
   }
 
-  // Function to prevent image overlaps on mobile for all items (including repeated ones)
-  preventOverlapsForAllItems() {
-    const minSpacing = 80; // Increased minimum spacing between images in pixels
-    let hasOverlaps = true;
-    let iterations = 0;
-    const maxIterations = 10; // Prevent infinite loops
-    
-    // Keep iterating until no overlaps are found or max iterations reached
-    while (hasOverlaps && iterations < maxIterations) {
-      hasOverlaps = false;
-      iterations++;
-      
-      for (let i = 0; i < this.items.length; i++) {
-        for (let j = i + 1; j < this.items.length; j++) {
-          const item1 = this.items[i];
-          const item2 = this.items[j];
-          
-          // Check if images overlap (not just centers)
-          const overlapX = Math.max(0, Math.min(item1.x + item1.w, item2.x + item2.w) - Math.max(item1.x, item2.x));
-          const overlapY = Math.max(0, Math.min(item1.y + item1.h, item2.y + item2.h) - Math.max(item1.y, item2.y));
-          
-          if (overlapX > 0 && overlapY > 0) {
-            hasOverlaps = true;
-            
-            // Calculate the distance between image centers
-            const center1X = item1.x + item1.w / 2;
-            const center1Y = item1.y + item1.h / 2;
-            const center2X = item2.x + item2.w / 2;
-            const center2Y = item2.y + item2.h / 2;
-            
-            // Calculate required spacing based on image sizes
-            const requiredSpacingX = (item1.w + item2.w) / 2 + minSpacing;
-            const requiredSpacingY = (item1.h + item2.h) / 2 + minSpacing;
-            
-            // Move images apart more aggressively
-            const moveX = (requiredSpacingX - Math.abs(center1X - center2X)) * 1.2;
-            const moveY = (requiredSpacingY - Math.abs(center1Y - center2Y)) * 1.2;
-            
-            // Move images apart
-            if (center1X < center2X) {
-              item1.x -= moveX / 2;
-              item2.x += moveX / 2;
-            } else {
-              item1.x += moveX / 2;
-              item2.x -= moveX / 2;
-            }
-            
-            if (center1Y < center2Y) {
-              item1.y -= moveY / 2;
-              item2.y += moveY / 2;
-            } else {
-              item1.y += moveY / 2;
-              item2.y -= moveY / 2;
-            }
-          }
-        }
-      }
-    }
-  }
+  // Periodic, size-aware relaxation with spatial hashing (no-overlap for mobile)
+  relaxNoOverlapPeriodic(items, tileW, tileH, {
+    iterations = 16,
+    cellSize = 120,
+    spacing = 80,
+    sizeAware = true
+  } = {}) {
+    // Normalize to [0, L) with wrap-around
+    const mod = (v, L) => ((v % L) + L) % L;
 
-  // Function to prevent image overlaps on mobile for base items only
-  preventOverlaps(items) {
-    const minSpacing = 80; // Increased minimum spacing between images in pixels
-    let hasOverlaps = true;
-    let iterations = 0;
-    const maxIterations = 10; // Prevent infinite loops
-    
-    // Keep iterating until no overlaps are found or max iterations reached
-    while (hasOverlaps && iterations < maxIterations) {
-      hasOverlaps = false;
-      iterations++;
-      
-      for (let i = 0; i < items.length; i++) {
-        for (let j = i + 1; j < items.length; j++) {
-          const item1 = items[i];
-          const item2 = items[j];
-          
-          // Check if images overlap (not just centers)
-          const overlapX = Math.max(0, Math.min(item1.x + item1.w, item2.x + item2.w) - Math.max(item1.x, item2.x));
-          const overlapY = Math.max(0, Math.min(item1.y + item1.h, item2.y + item2.h) - Math.max(item1.y, item2.y));
-          
-          if (overlapX > 0 && overlapY > 0) {
-            hasOverlaps = true;
-            
-            // Calculate the distance between image centers
-            const center1X = item1.x + item1.w / 2;
-            const center1Y = item1.y + item1.h / 2;
-            const center2X = item2.x + item2.w / 2;
-            const center2Y = item2.y + item2.h / 2;
-            
-            // Calculate required spacing based on image sizes
-            const requiredSpacingX = (item1.w + item2.w) / 2 + minSpacing;
-            const requiredSpacingY = (item1.h + item2.h) / 2 + minSpacing;
-            
-            // Move images apart more aggressively
-            const moveX = (requiredSpacingX - Math.abs(center1X - center2X)) * 1.2;
-            const moveY = (requiredSpacingY - Math.abs(center1Y - center2Y)) * 1.2;
-            
-            // Move images apart
-            if (center1X < center2X) {
-              item1.x -= moveX / 2;
-              item2.x += moveX / 2;
-            } else {
-              item1.x += moveX / 2;
-              item2.x -= moveX / 2;
-            }
-            
-            if (center1Y < center2Y) {
-              item1.y -= moveY / 2;
-              item2.y += moveY / 2;
-            } else {
-              item1.y += moveY / 2;
-              item2.y -= moveY / 2;
+    // Build a spatial hash each iteration
+    const buildHash = () => {
+      const cols = Math.max(1, Math.ceil(tileW / cellSize));
+      const rows = Math.max(1, Math.ceil(tileH / cellSize));
+      const hash = new Map();
+
+      const pushToCell = (gx, gy, it) => {
+        const key = `${(gx + cols) % cols}|${(gy + rows) % rows}`;
+        if (!hash.has(key)) hash.set(key, []);
+        hash.get(key).push(it);
+      };
+
+      items.forEach(it => {
+        // normalized coords inside base tile
+        it._nx = mod(it.x, tileW);
+        it._ny = mod(it.y, tileH);
+        const gx = Math.floor(it._nx / cellSize);
+        const gy = Math.floor(it._ny / cellSize);
+        pushToCell(gx, gy, it);
+      });
+
+      return { hash, cols, rows };
+    };
+
+    for (let iter = 0; iter < iterations; iter++) {
+      const { hash, cols, rows } = buildHash();
+      let movedPairs = 0;
+
+      // Relax by visiting each item and its neighboring cells
+      items.forEach(a => {
+        const gx = Math.floor(a._nx / cellSize);
+        const gy = Math.floor(a._ny / cellSize);
+
+        for (let ox = -1; ox <= 1; ox++) {
+          for (let oy = -1; oy <= 1; oy++) {
+            const key = `${(gx + ox + cols) % cols}|${(gy + oy + rows) % rows}`;
+            const bucket = hash.get(key);
+            if (!bucket) continue;
+
+            for (const b of bucket) {
+              if (a === b) continue;
+
+              // Shortest vector between a and b under periodic boundary
+              let dx = a._nx - b._nx;
+              let dy = a._ny - b._ny;
+              dx -= Math.round(dx / tileW) * tileW;
+              dy -= Math.round(dy / tileH) * tileH;
+
+              const dist = Math.hypot(dx, dy) || 1e-6;
+
+              // Size-aware "radius" (use min side to be conservative)
+              const ra = sizeAware ? Math.min(a.w, a.h) * 0.5 : 0;
+              const rb = sizeAware ? Math.min(b.w, b.h) * 0.5 : 0;
+              const required = ra + rb + spacing;
+
+              if (dist < required) {
+                // Push away along the connecting line (split displacement)
+                const push = (required - dist) * 0.5;
+                const ux = dx / dist;
+                const uy = dy / dist;
+
+                a.x += ux * push;
+                a.y += uy * push;
+                b.x -= ux * push;
+                b.y -= uy * push;
+
+                movedPairs++;
+              }
             }
           }
         }
-      }
+      });
+
+      // Wrap back into [0, tile] to keep periodicity; add tiny jitter to avoid lock
+      const jitter = 0.01;
+      items.forEach(it => {
+        it.x = mod(it.x, tileW) + (Math.random() - 0.5) * jitter;
+        it.y = mod(it.y, tileH) + (Math.random() - 0.5) * jitter;
+      });
+
+      // Early-out if stable
+      if (movedPairs === 0) break;
     }
   }
 
