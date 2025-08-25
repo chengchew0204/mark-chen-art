@@ -78,14 +78,15 @@
           display: block;
           
           @media (max-width: 768px) {
-            // Keep the same image styling as desktop
-            max-width: 100%;
-            max-height: 100%;
+            // Make images larger on mobile
+            max-width: 120%; // Allow images to be slightly larger than container
+            max-height: 120%;
             width: auto;
             height: auto;
             object-fit: contain;
             will-change: transform;
             display: block;
+            transform: scale(1.1); // Make images 10% larger
           }
         }
       }

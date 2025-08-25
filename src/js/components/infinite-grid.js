@@ -98,10 +98,19 @@ export default class InfiniteGrid {
     this.winW = window.innerWidth;
     this.winH = window.innerHeight;
 
-    this.tileSize = {
-      w: this.winW,
-      h: (this.winW) * (this.originalSize.h / this.originalSize.w),
-    };
+    // Adjust tile size for mobile to show bigger, fewer images
+    if (this.isMobile) {
+      // Make tiles larger on mobile for bigger images
+      this.tileSize = {
+        w: this.winW * 1.5, // 50% larger than screen width
+        h: (this.winW * 1.5) * (this.originalSize.h / this.originalSize.w),
+      };
+    } else {
+      this.tileSize = {
+        w: this.winW,
+        h: (this.winW) * (this.originalSize.h / this.originalSize.w),
+      };
+    }
 
     this.scroll.current = { x: 0, y: 0 };
     this.scroll.target  = { x: 0, y: 0 };
@@ -113,11 +122,18 @@ export default class InfiniteGrid {
       const scaleX = this.tileSize.w / this.originalSize.w;
       const scaleY = this.tileSize.h / this.originalSize.h;
       const source = this.sources[i % this.sources.length];
+      
+      // Add extra spacing on mobile to make images less crowded
+      let spacingMultiplier = 1;
+      if (this.isMobile) {
+        spacingMultiplier = 1.3; // 30% more spacing between images
+      }
+      
       return {
         src: source.src,
         caption: source.caption,
-        x:   d.x * scaleX,
-        y:   d.y * scaleY,
+        x:   d.x * scaleX * spacingMultiplier,
+        y:   d.y * scaleY * spacingMultiplier,
         w:   d.w * scaleX,
         h:   d.h * scaleY
       };
