@@ -100,10 +100,10 @@ export default class InfiniteGrid {
 
     // Adjust tile size for mobile to show bigger, fewer images
     if (this.isMobile) {
-      // Make tiles larger on mobile for bigger images
+      // Make tiles larger on mobile for bigger images and more space
       this.tileSize = {
-        w: this.winW * 1.5, // 50% larger than screen width
-        h: (this.winW * 1.5) * (this.originalSize.h / this.originalSize.w),
+        w: this.winW * 2.0, // 100% larger than screen width for more spacing
+        h: (this.winW * 2.0) * (this.originalSize.h / this.originalSize.w),
       };
     } else {
       this.tileSize = {
@@ -126,7 +126,7 @@ export default class InfiniteGrid {
       // Add extra spacing on mobile to make images less crowded
       let spacingMultiplier = 1;
       if (this.isMobile) {
-        spacingMultiplier = 1.8; // 80% more spacing between images to prevent overlaps
+        spacingMultiplier = 2.2; // 120% more spacing between images to reduce crowding
       }
       
       return {
@@ -213,7 +213,7 @@ export default class InfiniteGrid {
 
   // Function to prevent image overlaps on mobile for all items (including repeated ones)
   preventOverlapsForAllItems() {
-    const minSpacing = 50; // Minimum spacing between images in pixels
+    const minSpacing = 80; // Increased minimum spacing between images in pixels
     
     for (let i = 0; i < this.items.length; i++) {
       for (let j = i + 1; j < this.items.length; j++) {
@@ -261,7 +261,7 @@ export default class InfiniteGrid {
 
   // Function to prevent image overlaps on mobile for base items only
   preventOverlaps(items) {
-    const minSpacing = 50; // Minimum spacing between images in pixels
+    const minSpacing = 80; // Increased minimum spacing between images in pixels
     
     for (let i = 0; i < items.length; i++) {
       for (let j = i + 1; j < items.length; j++) {
