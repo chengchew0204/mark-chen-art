@@ -4,9 +4,22 @@
   --margin: 30rem;
   --gap: 20rem;
   --column: calc((var(--rvw) * 100 - var(--margin) * 2 - var(--gap) * 9) / 10);
+  
   @media (max-width: 1024px) {
     --margin: 15px;
     --gap: 10rem;
     --column: calc((100vw - var(--margin) * 2 - var(--gap) * 5) / 6);
+  }
+  
+  @media (max-width: 768px) {
+    --margin: 10px;
+    --gap: 5rem;
+    --column: calc((100vw - var(--margin) * 2 - var(--gap) * 3) / 4);
+  }
+  
+  @media (max-width: 480px) {
+    --margin: 8px;
+    --gap: 3rem;
+    --column: calc((100vw - var(--margin) * 2 - var(--gap) * 1) / 2);
   }
 }

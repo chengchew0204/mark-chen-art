@@ -9,6 +9,9 @@ export default class InfiniteGrid {
     this.data         = data;
     this.originalSize = originalSize;
 
+    // Check if device is mobile
+    this.isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
+
     this.scroll = {
       ease:   0.06,
       current:{ x: 0, y: 0 },
@@ -33,13 +36,25 @@ export default class InfiniteGrid {
     this.onMouseMove  = this.onMouseMove.bind(this);
     this.onMouseDown  = this.onMouseDown.bind(this);
     this.onMouseUp    = this.onMouseUp.bind(this);
+    this.onTouchStart = this.onTouchStart.bind(this);
+    this.onTouchMove  = this.onTouchMove.bind(this);
+    this.onTouchEnd   = this.onTouchEnd.bind(this);
     this.render       = this.render.bind(this);
 
     window.addEventListener('resize', this.onResize);
-    window.addEventListener('wheel', this.onWheel, { passive: false });
-    window.addEventListener('mousemove', this.onMouseMove);
-    this.$container.addEventListener('mousedown', this.onMouseDown);
-    window.addEventListener('mouseup', this.onMouseUp);
+    
+    // Only add desktop event listeners if not mobile
+    if (!this.isMobile) {
+      window.addEventListener('wheel', this.onWheel, { passive: false });
+      window.addEventListener('mousemove', this.onMouseMove);
+      this.$container.addEventListener('mousedown', this.onMouseDown);
+      window.addEventListener('mouseup', this.onMouseUp);
+    } else {
+      // Add touch event listeners for mobile
+      this.$container.addEventListener('touchstart', this.onTouchStart, { passive: true });
+      this.$container.addEventListener('touchmove', this.onTouchMove, { passive: true });
+      this.$container.addEventListener('touchend', this.onTouchEnd, { passive: true });
+    }
 
     this.observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -172,6 +187,11 @@ export default class InfiniteGrid {
   }
 
   onWheel(e) {
+    // Allow normal scrolling on mobile devices
+    if (this.isMobile) {
+      return;
+    }
+    
     e.preventDefault();
     const factor = 0.4;
     this.scroll.target.x -= e.deltaX * factor;
@@ -207,7 +227,51 @@ export default class InfiniteGrid {
     }
   }
 
+  onTouchStart(e) {
+    // Don't prevent default to allow normal touch scrolling
+    // e.preventDefault();
+    this.isDragging = true;
+    document.documentElement.classList.add('dragging');
+    this.mouse.press.t = 1;
+    this.drag.startX = e.touches[0].clientX;
+    this.drag.startY = e.touches[0].clientY;
+    this.drag.scrollX = this.scroll.target.x;
+    this.drag.scrollY = this.scroll.target.y;
+  }
+
+  onTouchMove(e) {
+    // Don't prevent default to allow normal touch scrolling
+    // e.preventDefault();
+    this.mouse.x.t = e.touches[0].clientX / this.winW;
+    this.mouse.y.t = e.touches[0].clientY / this.winH;
+
+    if (this.isDragging) {
+      const dx = e.touches[0].clientX - this.drag.startX;
+      const dy = e.touches[0].clientY - this.drag.startY;
+      this.scroll.target.x = this.drag.scrollX + dx;
+      this.scroll.target.y = this.drag.scrollY + dy;
+    }
+  }
+
+  onTouchEnd() {
+    this.isDragging = false;
+    document.documentElement.classList.remove('dragging');
+    this.mouse.press.t = 0;
+  }
+
   render() {
+    // Skip custom scrolling on mobile devices
+    if (this.isMobile) {
+      // On mobile, just observe items for visibility without custom scrolling
+      this.items.forEach(item => {
+        // Reset any transforms that might interfere with normal scrolling
+        item.el.style.transform = 'none';
+        item.img.style.transform = 'none';
+      });
+      requestAnimationFrame(this.render);
+      return;
+    }
+
     this.scroll.current.x += (this.scroll.target.x - this.scroll.current.x) * this.scroll.ease;
     this.scroll.current.y += (this.scroll.target.y - this.scroll.current.y) * this.scroll.ease;
 

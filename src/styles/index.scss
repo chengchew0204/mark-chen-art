@@ -14,9 +14,13 @@ html {
   background: $white;
   color: $black;
   font-size: calc((1 / 1440) * 100vw);
-  overflow: hidden;
+  // Remove overflow hidden to allow scrolling on mobile
+  // overflow: hidden;
   @media (max-width: 1024px) {
     font-size: 1px;
+  }
+  @media (max-width: 768px) {
+    font-size: 0.8px;
   }
 }
 body {
@@ -28,7 +32,15 @@ body {
   margin: 0;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
-  overscroll-behavior-y: none;
+  // Remove overscroll behavior restriction for mobile
+  // overscroll-behavior-y: none;
+  
+  // Add proper mobile touch handling
+  @media (max-width: 768px) {
+    font-size: 10rem;
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 a {
   text-decoration: none;
