@@ -78,15 +78,15 @@
           display: block;
           
           @media (max-width: 768px) {
-            // Make images larger on mobile
-            max-width: 120%; // Allow images to be slightly larger than container
-            max-height: 120%;
+            // Make images larger on mobile but ensure they stay within bounds
+            max-width: 100%; // Keep within container to prevent overlaps
+            max-height: 100%;
             width: auto;
             height: auto;
             object-fit: contain;
             will-change: transform;
             display: block;
-            transform: scale(1.1); // Make images 10% larger
+            transform: scale(1.05); // Slightly larger but not too much
           }
         }
       }

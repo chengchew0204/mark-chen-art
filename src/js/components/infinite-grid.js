@@ -100,10 +100,10 @@ export default class InfiniteGrid {
 
     // Adjust tile size for mobile to show bigger, fewer images
     if (this.isMobile) {
-      // Make tiles much larger on mobile for bigger images and more space
+      // Make tiles larger on mobile for bigger images
       this.tileSize = {
-        w: this.winW * 2.5, // 150% larger than screen width
-        h: (this.winW * 2.5) * (this.originalSize.h / this.originalSize.w),
+        w: this.winW * 1.5, // 50% larger than screen width
+        h: (this.winW * 1.5) * (this.originalSize.h / this.originalSize.w),
       };
     } else {
       this.tileSize = {
@@ -118,22 +118,15 @@ export default class InfiniteGrid {
 
     this.$container.innerHTML = '';
 
-    // Filter data to show fewer images on mobile
-    let filteredData = this.data;
-    if (this.isMobile) {
-      // Only show every 3rd image on mobile to reduce crowding
-      filteredData = this.data.filter((_, index) => index % 3 === 0);
-    }
-
-    const baseItems = filteredData.map((d, i) => {
+    const baseItems = this.data.map((d, i) => {
       const scaleX = this.tileSize.w / this.originalSize.w;
       const scaleY = this.tileSize.h / this.originalSize.h;
       const source = this.sources[i % this.sources.length];
       
-      // Add much more spacing on mobile to make images less crowded
+      // Add extra spacing on mobile to make images less crowded
       let spacingMultiplier = 1;
       if (this.isMobile) {
-        spacingMultiplier = 2.0; // 100% more spacing between images
+        spacingMultiplier = 1.8; // 80% more spacing between images to prevent overlaps
       }
       
       return {
@@ -146,19 +139,14 @@ export default class InfiniteGrid {
       };
     });
 
-    this.items = [];
-    
-    // Reduce the number of repeated images on mobile
-    let repsX, repsY;
+    // Prevent overlaps on mobile by adjusting positions
     if (this.isMobile) {
-      // Only create 2x2 grid instead of full repetition on mobile
-      repsX = [0, this.tileSize.w];
-      repsY = [0, this.tileSize.h];
-    } else {
-      // Full repetition for desktop
-      repsX = [0, this.tileSize.w];
-      repsY = [0, this.tileSize.h];
+      this.preventOverlaps(baseItems);
     }
+
+    this.items = [];
+    const repsX = [0, this.tileSize.w];
+    const repsY = [0, this.tileSize.h];
 
     baseItems.forEach(base => {
       repsX.forEach(offsetX => {
@@ -215,6 +203,54 @@ export default class InfiniteGrid {
 
     this.scroll.current.x = this.scroll.target.x = this.scroll.last.x = -this.winW * 0.1;
     this.scroll.current.y = this.scroll.target.y = this.scroll.last.y = -this.winH * 0.1;
+  }
+
+  // Function to prevent image overlaps on mobile
+  preventOverlaps(items) {
+    const minSpacing = 50; // Minimum spacing between images in pixels
+    
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        const item1 = items[i];
+        const item2 = items[j];
+        
+        // Calculate the distance between image centers
+        const center1X = item1.x + item1.w / 2;
+        const center1Y = item1.y + item1.h / 2;
+        const center2X = item2.x + item2.w / 2;
+        const center2Y = item2.y + item2.h / 2;
+        
+        const distanceX = Math.abs(center1X - center2X);
+        const distanceY = Math.abs(center1Y - center2Y);
+        
+        // Calculate required spacing based on image sizes
+        const requiredSpacingX = (item1.w + item2.w) / 2 + minSpacing;
+        const requiredSpacingY = (item1.h + item2.h) / 2 + minSpacing;
+        
+        // If images are too close, adjust their positions
+        if (distanceX < requiredSpacingX && distanceY < requiredSpacingY) {
+          const overlapX = requiredSpacingX - distanceX;
+          const overlapY = requiredSpacingY - distanceY;
+          
+          // Move images apart
+          if (center1X < center2X) {
+            item1.x -= overlapX / 2;
+            item2.x += overlapX / 2;
+          } else {
+            item1.x += overlapX / 2;
+            item2.x -= overlapX / 2;
+          }
+          
+          if (center1Y < center2Y) {
+            item1.y -= overlapY / 2;
+            item2.y += overlapY / 2;
+          } else {
+            item1.y += overlapY / 2;
+            item2.y -= overlapY / 2;
+          }
+        }
+      }
+    }
   }
 
   onWheel(e) {
