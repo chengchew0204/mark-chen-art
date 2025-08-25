@@ -100,10 +100,10 @@ export default class InfiniteGrid {
 
     // Adjust tile size for mobile to show bigger, fewer images
     if (this.isMobile) {
-      // Make tiles larger on mobile for bigger images
+      // Make tiles much larger on mobile for bigger images and more space
       this.tileSize = {
-        w: this.winW * 1.5, // 50% larger than screen width
-        h: (this.winW * 1.5) * (this.originalSize.h / this.originalSize.w),
+        w: this.winW * 2.5, // 150% larger than screen width
+        h: (this.winW * 2.5) * (this.originalSize.h / this.originalSize.w),
       };
     } else {
       this.tileSize = {
@@ -118,15 +118,22 @@ export default class InfiniteGrid {
 
     this.$container.innerHTML = '';
 
-    const baseItems = this.data.map((d, i) => {
+    // Filter data to show fewer images on mobile
+    let filteredData = this.data;
+    if (this.isMobile) {
+      // Only show every 3rd image on mobile to reduce crowding
+      filteredData = this.data.filter((_, index) => index % 3 === 0);
+    }
+
+    const baseItems = filteredData.map((d, i) => {
       const scaleX = this.tileSize.w / this.originalSize.w;
       const scaleY = this.tileSize.h / this.originalSize.h;
       const source = this.sources[i % this.sources.length];
       
-      // Add extra spacing on mobile to make images less crowded
+      // Add much more spacing on mobile to make images less crowded
       let spacingMultiplier = 1;
       if (this.isMobile) {
-        spacingMultiplier = 1.3; // 30% more spacing between images
+        spacingMultiplier = 2.0; // 100% more spacing between images
       }
       
       return {
@@ -140,8 +147,18 @@ export default class InfiniteGrid {
     });
 
     this.items = [];
-    const repsX = [0, this.tileSize.w];
-    const repsY = [0, this.tileSize.h];
+    
+    // Reduce the number of repeated images on mobile
+    let repsX, repsY;
+    if (this.isMobile) {
+      // Only create 2x2 grid instead of full repetition on mobile
+      repsX = [0, this.tileSize.w];
+      repsY = [0, this.tileSize.h];
+    } else {
+      // Full repetition for desktop
+      repsX = [0, this.tileSize.w];
+      repsY = [0, this.tileSize.h];
+    }
 
     baseItems.forEach(base => {
       repsX.forEach(offsetX => {
