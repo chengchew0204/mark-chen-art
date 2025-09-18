@@ -1,13 +1,12 @@
 @use '../util' as *;
 
-// Override html overflow for about page
-html.about-page {
-  overflow: auto !important;
-}
-
+html,
 body.about {
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: white;
+  height: 100%;
+  -webkit-overflow-scrolling: touch; // Smooth scrolling on iOS
 }
 
 #about-content {

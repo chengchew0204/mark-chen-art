@@ -52,6 +52,6 @@ export default function HomePage() {
 
 /*
 
-The about page is not scrollable on mobiles.
+The about page is not scrollable on mobiles. Please make sure it can be scrolled.
 
 */

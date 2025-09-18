@@ -16,8 +16,6 @@ export default function AboutPage() {
 
     // Set body class for about page styles
     document.body.className = 'about'
-    // Set html class to override global overflow hidden
-    document.documentElement.className = 'about-page'
 
     // Intersection Observer for scroll-triggered animations
     const observerOptions = {
@@ -40,7 +38,6 @@ export default function AboutPage() {
     return () => {
       window.removeEventListener('resize', handleResize)
       document.body.className = ''
-      document.documentElement.className = ''
       observer.disconnect()
     }
   }, [])
