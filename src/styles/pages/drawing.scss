@@ -1,5 +1,19 @@
 @use '../util' as *;
 
+// Override global scrolling for drawing page - infinite grid needs no scroll
+html.drawing-page {
+  overflow: hidden !important;
+}
+
+body.drawing {
+  overflow: hidden !important;
+  overscroll-behavior-y: none;
+  
+  @media (max-width: 768px) {
+    touch-action: none; // Disable default touch actions for custom scrolling
+  }
+}
+
 #hero {
   width: 100%;
   height: 100vh;

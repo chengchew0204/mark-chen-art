@@ -37,12 +37,14 @@ export default function PaintingPage() {
     handleResize()
     window.addEventListener('resize', handleResize)
 
-    // Set body class for painting page styles
+    // Set body and html classes for painting page styles
     document.body.className = 'painting'
+    document.documentElement.classList.add('painting-page')
 
     return () => {
       window.removeEventListener('resize', handleResize)
       document.body.className = ''
+      document.documentElement.classList.remove('painting-page')
     }
   }, [])
 

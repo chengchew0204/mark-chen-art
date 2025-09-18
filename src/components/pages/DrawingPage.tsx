@@ -45,12 +45,14 @@ export default function DrawingPage() {
     handleResize()
     window.addEventListener('resize', handleResize)
 
-    // Set body class for drawing page styles
+    // Set body and html classes for drawing page styles
     document.body.className = 'drawing'
+    document.documentElement.classList.add('drawing-page')
 
     return () => {
       window.removeEventListener('resize', handleResize)
       document.body.className = ''
+      document.documentElement.classList.remove('drawing-page')
     }
   }, [])
 
