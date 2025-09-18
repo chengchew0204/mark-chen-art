@@ -32,6 +32,9 @@ body.about {
     letter-spacing: 2rem;
     margin-bottom: 60rem;
     text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 0.8s ease-out 0.2s forwards;
     
     @media (max-width: 768px) {
       font-size: 32rem;
@@ -55,6 +58,9 @@ body.about {
   
   .intro {
     margin-bottom: 60rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.8s ease-out 0.5s forwards;
     
     @media (max-width: 768px) {
       margin-bottom: 40rem;
@@ -66,6 +72,18 @@ body.about {
       margin-bottom: 24rem;
       font-weight: 300;
       letter-spacing: 0.3rem;
+      opacity: 0;
+      transform: translateY(15px);
+      
+      &:nth-child(1) {
+        animation: fadeInUp 0.6s ease-out 0.8s forwards;
+      }
+      &:nth-child(2) {
+        animation: fadeInUp 0.6s ease-out 1.0s forwards;
+      }
+      &:nth-child(3) {
+        animation: fadeInUp 0.6s ease-out 1.2s forwards;
+      }
       
       @media (max-width: 768px) {
         font-size: 14rem;
@@ -80,10 +98,11 @@ body.about {
   }
   
   .divider {
-    width: 60rem;
+    width: 0;
     height: 1px;
     background: rgba(0, 0, 0, 0.2);
     margin: 60rem 0;
+    animation: expandWidth 0.8s ease-out 1.4s forwards;
     
     @media (max-width: 768px) {
       width: 40rem;
@@ -91,13 +110,62 @@ body.about {
     }
   }
   
-  .education,
-  .exhibitions {
+  .education {
     margin-bottom: 60rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
     
     @media (max-width: 768px) {
       margin-bottom: 40rem;
     }
+    
+    &.animate-in {
+      opacity: 1;
+      transform: translateY(0);
+      
+      li {
+        &:nth-child(1) { animation: slideInLeft 0.5s ease-out 0.4s forwards; }
+        &:nth-child(2) { animation: slideInLeft 0.5s ease-out 0.5s forwards; }
+        &:nth-child(3) { animation: slideInLeft 0.5s ease-out 0.6s forwards; }
+      }
+    }
+  }
+  
+  .exhibitions {
+    margin-bottom: 60rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    
+    @media (max-width: 768px) {
+      margin-bottom: 40rem;
+    }
+    
+    &.animate-in {
+      opacity: 1;
+      transform: translateY(0);
+      
+      li {
+        &:nth-child(1) { animation: slideInLeft 0.5s ease-out 0.4s forwards; }
+        &:nth-child(2) { animation: slideInLeft 0.5s ease-out 0.45s forwards; }
+        &:nth-child(3) { animation: slideInLeft 0.5s ease-out 0.5s forwards; }
+        &:nth-child(4) { animation: slideInLeft 0.5s ease-out 0.55s forwards; }
+        &:nth-child(5) { animation: slideInLeft 0.5s ease-out 0.6s forwards; }
+        &:nth-child(6) { animation: slideInLeft 0.5s ease-out 0.65s forwards; }
+        &:nth-child(7) { animation: slideInLeft 0.5s ease-out 0.7s forwards; }
+        &:nth-child(8) { animation: slideInLeft 0.5s ease-out 0.75s forwards; }
+        &:nth-child(9) { animation: slideInLeft 0.5s ease-out 0.8s forwards; }
+        &:nth-child(10) { animation: slideInLeft 0.5s ease-out 0.85s forwards; }
+        &:nth-child(11) { animation: slideInLeft 0.5s ease-out 0.9s forwards; }
+        &:nth-child(12) { animation: slideInLeft 0.5s ease-out 0.95s forwards; }
+        &:nth-child(13) { animation: slideInLeft 0.5s ease-out 1.0s forwards; }
+      }
+    }
+  }
+  
+  .education,
+  .exhibitions {
     
     ul {
       list-style: none;
@@ -113,6 +181,9 @@ body.about {
       letter-spacing: 0.3rem;
       padding-left: 20rem;
       position: relative;
+      opacity: 0;
+      transform: translateX(-20px);
+      transition: all 0.3s ease;
       
       @media (max-width: 768px) {
         font-size: 13rem;
@@ -157,10 +228,28 @@ body.about {
     color: black;
     text-decoration: none;
     border-bottom: 1px solid transparent;
-    transition: border-color 0.3s ease;
+    transition: all 0.3s ease;
     
     &:hover {
       border-bottom-color: black;
+      transform: translateY(-1px);
+      letter-spacing: 0.5rem;
+    }
+  }
+  
+  // Enhanced list item hover effects
+  .education,
+  .exhibitions {
+    li {
+      &:hover {
+        transform: translateX(5px);
+        color: rgba(0, 0, 0, 0.8);
+        
+        &:before {
+          width: 8rem;
+          background: rgba(0, 0, 0, 0.8);
+        }
+      }
     }
   }
   
@@ -173,5 +262,41 @@ body.about {
   ::-moz-selection {
     background: black;
     color: white;
+  }
+}
+
+// Keyframe animations
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes expandWidth {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 60rem;
+    
+    @media (max-width: 768px) {
+      width: 40rem;
+    }
   }
 }

@@ -17,9 +17,28 @@ export default function AboutPage() {
     // Set body class for about page styles
     document.body.className = 'about'
 
+    // Intersection Observer for scroll-triggered animations
+    const observerOptions = {
+      threshold: 0.2,
+      rootMargin: '0px 0px -50px 0px'
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-in')
+        }
+      })
+    }, observerOptions)
+
+    // Observe sections that should animate on scroll
+    const animatedSections = document.querySelectorAll('.education, .exhibitions')
+    animatedSections.forEach((section) => observer.observe(section))
+
     return () => {
       window.removeEventListener('resize', handleResize)
       document.body.className = ''
+      observer.disconnect()
     }
   }, [])
 

@@ -41,6 +41,7 @@ export default function HomePage() {
               <p>Contemporary artist exploring the intersection of traditional techniques and modern expression through drawing and painting.</p>
               <p>Each work captures moments of contemplation, translating emotion into monochrome studies and vibrant impressions.</p>
               <p>Based in the studio, creating limited edition prints and original works.</p>
+              <a href="/about" className="about-toggle">more...</a>
             </div>
           </div>
         </div>
