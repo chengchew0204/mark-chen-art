@@ -14,8 +14,9 @@ export default function AboutPage() {
     handleResize()
     window.addEventListener('resize', handleResize)
 
-    // Set body class for about page styles
+    // Set body and html classes for about page styles
     document.body.className = 'about'
+    document.documentElement.classList.add('about-page')
 
     // Intersection Observer for scroll-triggered animations
     const observerOptions = {
@@ -38,6 +39,7 @@ export default function AboutPage() {
     return () => {
       window.removeEventListener('resize', handleResize)
       document.body.className = ''
+      document.documentElement.classList.remove('about-page')
       observer.disconnect()
     }
   }, [])
