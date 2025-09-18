@@ -2,9 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  experimental: {
-    appDir: true,
-  },
   // Enable SCSS support
   sassOptions: {
     includePaths: ['./src/styles'],

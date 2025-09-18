@@ -186,10 +186,12 @@ export default function InfiniteGrid({ sources, data, originalSize }: InfiniteGr
           // Only use SplitText if available
           if (typeof window !== 'undefined' && SplitText) {
             const split = new SplitText(caption, { type: 'lines', linesClass: 'line' })
-            split.lines.forEach((line: HTMLElement, i: number) => {
-              line.style.transitionDelay = `${i * 0.15}s`
-              if (line.parentElement) {
-                line.parentElement.style.transitionDelay = `${i * 0.15}s`
+            split.lines.forEach((line: Element, i: number) => {
+              if (line instanceof HTMLElement) {
+                line.style.transitionDelay = `${i * 0.15}s`
+                if (line.parentElement) {
+                  line.parentElement.style.transitionDelay = `${i * 0.15}s`
+                }
               }
             })
           }
@@ -441,7 +443,7 @@ export default function InfiniteGrid({ sources, data, originalSize }: InfiniteGr
   const initIntro = useCallback(() => {
     if (!containerRef.current) return
     
-    const introItems = [...containerRef.current.querySelectorAll('.item-wrapper')].filter((item) => {
+    const introItems = Array.from(containerRef.current.querySelectorAll('.item-wrapper')).filter((item) => {
       const rect = item.getBoundingClientRect()
       return (
         rect.x > -rect.width &&
