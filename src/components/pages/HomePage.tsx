@@ -49,3 +49,9 @@ export default function HomePage() {
     </main>
   )
 }
+
+/*
+
+The about page is not scrollable on mobiles.
+
+*/
