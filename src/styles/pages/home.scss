@@ -1,0 +1,155 @@
+@use '../util' as *;
+
+body.home {
+  // Allow scrolling for home page
+  overflow: auto;
+}
+
+#hero {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    color: $black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 1200rem;
+    margin: 0 auto;
+    padding: 0 40rem;
+    
+    @media (max-width: 1024px) {
+      padding: 0 30rem;
+    }
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 30rem;
+      padding: 0 20rem;
+      text-align: center;
+    }
+    
+    .featured-artwork {
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+      
+      .featured-image {
+        max-width: 700rem;
+        max-height: 750rem;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        opacity: 0.9;
+        filter: contrast(0.95);
+        transform: scale(0.91);
+        transform-origin: center;
+        
+        @media (max-width: 1024px) {
+          max-width: 500rem;
+          max-height: 600rem;
+        }
+        
+        @media (max-width: 768px) {
+          max-width: 320rem;
+          max-height: 400rem;
+          transform: scale(1);
+        }
+        
+        @media (max-width: 480px) {
+          max-width: 280rem;
+          max-height: 340rem;
+        }
+      }
+    }
+    
+    .text-content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 30rem;
+      max-width: 450rem;
+      position: relative;
+      z-index: 2;
+      margin-left: -150rem;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 40rem;
+      border-radius: 8rem;
+      
+      @media (max-width: 1024px) {
+        margin-left: -80rem;
+        padding: 30rem;
+      }
+      
+      @media (max-width: 768px) {
+        align-items: center;
+        text-align: center;
+        gap: 20rem;
+        max-width: none;
+        margin-left: 0;
+        background: transparent;
+        backdrop-filter: none;
+        padding: 0;
+      }
+      
+      h1 {
+        font-size: 48rem;
+        font-weight: 400;
+        margin: 0;
+        text-transform: uppercase;
+        line-height: 1.1;
+        
+        @media (max-width: 1024px) {
+          font-size: 42rem;
+        }
+        
+        @media (max-width: 768px) {
+          font-size: 36rem;
+        }
+        
+        @media (max-width: 480px) {
+          font-size: 28rem;
+        }
+      }
+      
+      .intro-text {
+        h2 {
+          font-size: 16rem;
+          font-weight: 400;
+          margin-bottom: 20rem;
+          text-transform: uppercase;
+          color: $black;
+          
+          @media (max-width: 768px) {
+            font-size: 14rem;
+            margin-bottom: 15rem;
+          }
+        }
+        
+        p {
+          font-size: 12rem;
+          line-height: 1.5;
+          color: rgba(0, 0, 0, 0.8);
+          margin-bottom: 15rem;
+          
+          @media (max-width: 768px) {
+            font-size: 11rem;
+            margin-bottom: 12rem;
+          }
+          
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+    }
+  }
+}

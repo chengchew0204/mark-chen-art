@@ -1,0 +1,19 @@
+@use '../util' as *;
+
+body.blog {
+  overflow: auto;
+}
+
+#blog-content {
+  padding: var(--margin);
+  padding-top: 120rem;
+  min-height: 100vh;
+  
+  @media (max-width: 1024px) {
+    padding-top: 100rem;
+  }
+  
+  @media (max-width: 768px) {
+    padding-top: 80rem;
+  }
+}

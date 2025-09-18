@@ -1,0 +1,140 @@
+@use '../util' as *;
+
+#hero {
+  width: 100%;
+  height: 100vh;
+  box-sizing: border-box;
+  // Keep overflow hidden for infinite grid scrolling
+  overflow: hidden;
+  user-select: none;
+  cursor: grab;
+  
+  // Mobile responsive adjustments while keeping infinite grid
+  @media (max-width: 768px) {
+    cursor: grab; // Keep grab cursor for touch scrolling
+    overflow: hidden; // Keep overflow hidden for infinite grid
+  }
+  
+  #images {
+    width: 100%;
+    height: 100%;
+    display: inline-block;
+    white-space: nowrap;
+    position: relative;
+    
+    @media (max-width: 768px) {
+      // Keep the same layout as desktop for infinite grid
+      height: 100%;
+      white-space: nowrap;
+      display: inline-block;
+    }
+    
+    .item {
+      position: absolute;
+      top: 0;
+      left: 0;
+      will-change: transform;
+      white-space: normal;
+      
+      @media (max-width: 768px) {
+        // Keep absolute positioning for infinite grid
+        position: absolute;
+        will-change: transform;
+      }
+      
+      .item-wrapper {
+        will-change: transform;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        
+        @media (max-width: 768px) {
+          will-change: transform;
+        }
+      }
+      .item-image {
+        overflow: visible;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        
+        @media (max-width: 768px) {
+          // Keep the same styling as desktop
+          overflow: visible;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+        }
+        
+        img {
+          max-width: 100%;
+          max-height: 100%;
+          width: auto;
+          height: auto;
+          object-fit: contain;
+          will-change: transform;
+          display: block;
+          
+          @media (max-width: 768px) {
+            // Make images larger on mobile but ensure they stay within bounds
+            max-width: 100%; // Keep within container to prevent overlaps
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            will-change: transform;
+            display: block;
+            transform: scale(1.05); // Slightly larger but not too much
+          }
+        }
+      }
+      small {
+        width: 100%;
+        display: block;
+        font-size: 8rem;
+        line-height: 1.25;
+        margin-top: 12rem;
+        
+        @media (max-width: 768px) {
+          font-size: 6rem; // Slightly smaller but still readable
+          margin-top: 8rem;
+          text-align: center;
+          padding: 0 1rem;
+        }
+        
+        .line-mask {
+          transition: transform 2s $in-out;
+          .line {
+            transition: transform 2s $in-out;
+          }
+        }
+      }
+      small:not(.visible) {
+        .line-mask {
+          transform: translateY(100%);
+          .line {
+            transform: translateY(110%);
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .line-mask {
+            transform: translateY(100%);
+            .line {
+              transform: translateY(110%);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+html.dragging #hero {
+  cursor: grabbing;
+  
+  @media (max-width: 768px) {
+    cursor: grabbing; // Keep grabbing cursor for touch scrolling
+  }
+}
