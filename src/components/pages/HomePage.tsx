@@ -38,9 +38,6 @@ export default function HomePage() {
           <div className="text-content">
             <h1>Mark Chen</h1>
             <div className="intro-text">
-              <p>Contemporary artist exploring the intersection of traditional techniques and modern expression through drawing and painting.</p>
-              <p>Each work captures moments of contemplation, translating emotion into monochrome studies and vibrant impressions.</p>
-              <p>Based in the studio, creating limited edition prints and original works.</p>
               <a href="/about" className="about-toggle">more...</a>
             </div>
           </div>
@@ -52,6 +49,10 @@ export default function HomePage() {
 
 /*
 
-The about page is not scrollable on mobiles. Please make sure it can be scrolled.
+Currently, the images in both the drawing and painting pages are displayed in random positions. 
+I think it looks a little messy. Can you make sure they are displayed in a grid pattern? 
+And I want them to be organized and aligned properly with each other. 
+The bottom of the paintings should be aligned with the bottom of the images in the same row. 
+Make it a grid with three rows. 
 
 */

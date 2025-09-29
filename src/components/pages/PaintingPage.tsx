@@ -16,17 +16,68 @@ export default function PaintingPage() {
     {src: '/painting/Rosesandplums.jpeg', caption: 'Roses and Plums <br>20 x 24 inch Oil on canvas <br>Original artwork <br>2023'},
   ]
 
-  const data = [
-    {x: 71, y: 58, w: 400, h: 270},
-    {x: 461, y: 270, w: 345, h: 230},
-    {x: 831, y: 158, w: 400, h: 270},
-    {x: 1291, y: 245, w: 260, h: 195},
-    {x: 351, y: 687, w: 260, h: 290},
-    {x: 751, y: 824, w: 205, h: 154},
-    {x: 1211, y: 540, w: 260, h: 350},
-  ]
+  // Generate 3x3 grid layout - duplicate images if needed to complete the grid
+  const generateGridData = () => {
+    const baseWidth = 340
+    const baseHeight = 320
+    const rowHeight = 450
+    const columnSpacing = 520 // Increased from 420 to 520 for wider spacing
+    const startX = 50 // Adjusted to accommodate wider spacing
+    const startY = 100
+    
+    const data = []
+    const itemsPerRow = 3
+    const totalRows = 3
+    const totalItems = itemsPerRow * totalRows // 9 items total
+    
+    // Create extended sources array by duplicating if needed
+    const extendedSources = [...sources]
+    while (extendedSources.length < totalItems) {
+      // Duplicate from the beginning until we have enough items
+      const remainingNeeded = totalItems - extendedSources.length
+      const itemsToDuplicate = Math.min(remainingNeeded, sources.length)
+      extendedSources.push(...sources.slice(0, itemsToDuplicate))
+    }
+    
+    let currentIndex = 0
+    
+    // Create 3 rows with 3 items each
+    for (let row = 0; row < totalRows; row++) {
+      const y = startY + (row * rowHeight)
+      
+      for (let col = 0; col < itemsPerRow; col++) {
+        const x = startX + (col * columnSpacing)
+        
+        // Use consistent sizes for perfect grid alignment
+        const w = baseWidth
+        const h = baseHeight
+        
+        data.push({x, y, w, h})
+        currentIndex++
+      }
+    }
+    
+    return data
+  }
+  
+  // Create extended sources for the grid
+  const createExtendedSources = () => {
+    const totalItems = 9 // 3x3 grid
+    const extendedSources = [...sources]
+    
+    while (extendedSources.length < totalItems) {
+      const remainingNeeded = totalItems - extendedSources.length
+      const itemsToDuplicate = Math.min(remainingNeeded, sources.length)
+      extendedSources.push(...sources.slice(0, itemsToDuplicate))
+    }
+    
+    return extendedSources
+  }
+  
+  const extendedSources = createExtendedSources()
 
-  const originalSize = {w: 1522, h: 1238}
+  const data = generateGridData()
+  const originalSize = {w: 1600, h: 1400} // Increased both width and height for wider spacing between grid repetitions
 
   useEffect(() => {
     // Set CSS custom property for responsive width
@@ -53,7 +104,7 @@ export default function PaintingPage() {
       <Header />
       <section id="hero">
         <InfiniteGrid 
-          sources={sources}
+          sources={extendedSources}
           data={data}
           originalSize={originalSize}
         />
@@ -61,17 +112,3 @@ export default function PaintingPage() {
     </main>
   )
 }
-
-/*
-Please adjust the data(it's size and position) for the painting page so that the images are more spread out and the layout is more balanced, and the images should not overlapped
-  const data = [
-    {x: 71, y: 58, w: 400, h: 270},
-    {x: 211, y: 255, w: 345, h: 230},
-    {x: 631, y: 158, w: 400, h: 270},
-    {x: 1191, y: 245, w: 260, h: 195},
-    {x: 351, y: 687, w: 260, h: 290},
-    {x: 751, y: 824, w: 205, h: 154},
-    {x: 911, y: 540, w: 260, h: 350},
-  ]
-
-*/

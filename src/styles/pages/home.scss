@@ -1,8 +1,8 @@
 @use '../util' as *;
 
 body.home {
-  // Allow scrolling for home page
-  overflow: auto;
+  // Prevent scrolling for home page
+  overflow: hidden;
 }
 
 #hero {
@@ -37,23 +37,6 @@ body.home {
     z-index: 1;
   }
   
-  // Floating decorative elements
-  &::after {
-    content: '';
-    position: absolute;
-    top: 10%;
-    right: 15%;
-    width: 120px;
-    height: 120px;
-    border: 1px solid rgba(0,0,0,0.05);
-    border-radius: 50%;
-    animation: float 6s ease-in-out infinite;
-    z-index: 1;
-    
-    @media (max-width: 768px) {
-      display: none;
-    }
-  }
   
   .hero-content {
     position: relative;
@@ -61,9 +44,9 @@ body.home {
     color: $black;
     display: flex;
     align-items: center;
-    justify-content: center;
-    max-width: 1200rem;
-    margin: 0 auto;
+    justify-content: flex-start;
+    width: 100%;
+    height: 100%;
     padding: 0 40rem;
     
     @media (max-width: 1024px) {
@@ -81,40 +64,56 @@ body.home {
       flex-shrink: 0;
       position: relative;
       z-index: 1;
+      width: 50vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      @media (max-width: 768px) {
+        width: 100%;
+      }
       
       .featured-image {
-        max-width: 700rem;
-        max-height: 750rem;
-        width: auto;
+        width: 100%;
         height: auto;
         object-fit: contain;
         opacity: 0;
         filter: contrast(0.95);
-        transform: scale(0.91);
+        transform: scale(1.95) translateY(13%) translateX(12%);
         transform-origin: center;
-        animation: fadeInScale 1.5s ease-out 0.3s forwards;
+        animation: subtleEntry 1.8s ease-out 0.3s forwards;
         transition: transform 0.4s ease, filter 0.4s ease;
         cursor: pointer;
         
         &:hover {
-          transform: scale(0.93);
+          transform: scale(2.09) translateY(13%) translateX(12%);
           filter: contrast(1) brightness(1.02);
         }
         
         @media (max-width: 1024px) {
-          max-width: 500rem;
-          max-height: 600rem;
+          transform: scale(1.65) translateY(13%) translateX(12%);
+          
+          &:hover {
+            transform: scale(1.76) translateY(13%) translateX(12%);
+          }
         }
         
         @media (max-width: 768px) {
-          max-width: 320rem;
-          max-height: 400rem;
-          transform: scale(1);
+          width: 80vw;
+          transform: scale(1.32) translateY(13%) translateX(12%);
+          
+          &:hover {
+            transform: scale(1.43) translateY(13%) translateX(12%);
+          }
         }
         
         @media (max-width: 480px) {
-          max-width: 280rem;
-          max-height: 340rem;
+          width: 90vw;
+          transform: scale(1.21) translateY(13%) translateX(12%);
+          
+          &:hover {
+            transform: scale(1.25) translateY(13%) translateX(12%);
+          }
         }
       }
     }
@@ -123,54 +122,72 @@ body.home {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      gap: 30rem;
-      max-width: 450rem;
+      gap: 25rem;
+      flex: 1;
       position: relative;
       z-index: 2;
-      margin-left: -150rem;
-      backdrop-filter: blur(10px);
-      padding: 40rem;
+      padding: 40rem 40rem 40rem 20rem;
       border-radius: 8rem;
       opacity: 0;
       transform: translateY(30px);
       animation: slideInUp 1s ease-out 0.8s forwards;
       
       @media (max-width: 1024px) {
-        margin-left: -80rem;
-        padding: 30rem;
+        padding: 30rem 30rem 30rem 40rem;
       }
       
       @media (max-width: 768px) {
         align-items: center;
         text-align: center;
         gap: 20rem;
-        max-width: none;
-        margin-left: 0;
+        flex: none;
         background: transparent;
         backdrop-filter: none;
         padding: 0;
       }
       
       h1 {
-        font-size: 48rem;
-        font-weight: 400;
+        font-size: 84rem;
+        font-weight: 300;
         margin: 0;
-        text-transform: uppercase;
-        line-height: 1.1;
+        line-height: 0.9;
+        letter-spacing: -0.02em;
         opacity: 0;
-        transform: translateY(20px);
-        animation: slideInUp 0.8s ease-out 1.2s forwards;
+        transform: translateY(30px) scale(0.8);
+        animation: dramaticTextEntry 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) 1.2s forwards;
+        background: linear-gradient(135deg, #000000 0%, #333333 50%, #000000 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        position: relative;
+        
+        &::before {
+          content: '';
+          position: absolute;
+          top: -5px;
+          left: -5px;
+          right: -5px;
+          bottom: -5px;
+          background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+          border-radius: 4px;
+          opacity: 0;
+          animation: shimmer 3s ease-in-out 2s infinite;
+          pointer-events: none;
+        }
         
         @media (max-width: 1024px) {
-          font-size: 42rem;
+          font-size: 72rem;
         }
         
         @media (max-width: 768px) {
-          font-size: 36rem;
+          font-size: 56rem;
+          line-height: 1.0;
         }
         
         @media (max-width: 480px) {
-          font-size: 28rem;
+          font-size: 42rem;
+          line-height: 1.1;
         }
       }
       
@@ -191,23 +208,27 @@ body.home {
         }
         
         .about-toggle {
+          padding-left: 300rem;
           opacity: 0;
-          transform: translateY(15px);
-          animation: slideInUp 0.6s ease-out 2.2s forwards;
+          transform: translateX(-20px);
+          animation: slideInRight 0.8s ease-out 2.2s forwards;
           display: inline-block;
           color: rgba(0, 0, 0, 0.6);
           text-decoration: none;
           font-size: 12rem;
-          transition: color 0.3s ease;
-          margin-top: 10rem;
+          transition: all 0.3s ease;
+          margin-top: 5rem;
           
           &:hover {
             color: rgba(0, 0, 0, 0.9);
+            transform: translateX(5px);
           }
           
           @media (max-width: 768px) {
             text-align: center;
             display: block;
+            padding-left: 0;
+            margin-top: 15rem;
           }
         }
         
@@ -244,14 +265,21 @@ body.home {
   }
 }
 
-@keyframes fadeInScale {
+@keyframes subtleEntry {
   0% {
     opacity: 0;
-    transform: scale(0.85);
+    transform: scale(1.92) translateY(13%) translateX(12%);
+    filter: contrast(0.92);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.94) translateY(13%) translateX(12%);
+    filter: contrast(0.93);
   }
   100% {
     opacity: 0.9;
-    transform: scale(0.91);
+    transform: scale(1.98) translateY(13%) translateX(12%);
+    filter: contrast(0.95);
   }
 }
 
@@ -263,6 +291,46 @@ body.home {
   100% {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes dramaticTextEntry {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.8);
+    filter: blur(2px);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(10px) scale(1.05);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  50% {
+    opacity: 0.3;
+    transform: translateX(100%);
   }
 }
 

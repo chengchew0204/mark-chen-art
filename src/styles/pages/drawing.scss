@@ -61,9 +61,12 @@ body.drawing {
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: flex-end; // Align items to bottom for consistent row alignment
+        height: 100%;
         
         @media (max-width: 768px) {
           will-change: transform;
+          justify-content: flex-end;
         }
       }
       .item-image {

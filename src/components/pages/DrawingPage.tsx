@@ -20,21 +20,52 @@ export default function DrawingPage() {
     {src: '/drawing/drawing-image-11.jpg', caption: 'WingedVictory <br>12 x 16 inch C type hand print <br>Edition of 1 Plus an additional artist Proof <br>2024'},
   ]
 
-  const data = [
-    {x: 10, y: 258, w: 400*0.9, h: 270*0.9},
-    {x: 311, y: 255, w: 540*0.8, h: 360*0.8},
-    {x: 731, y: 128, w: 400, h: 270},
-    {x: 1241, y: 145, w: 260, h: 195},
-    {x: 351, y: 687, w: 260, h: 290},
-    {x: 751, y: 824, w: 205, h: 154},
-    {x: 1111, y: 450, w: 260*0.8, h: 350*0.8},
-    {x: 951, y: 863, w: 400, h: 300},
-    {x: 31, y: 1122, w: 350, h: 260},
-    {x: 1451, y: 687, w: 300, h: 200},
-    {x: 451, y: 1187, w: 280, h: 190},
-  ]
+  // Generate 3x3 grid layout - duplicate images if needed to complete the grid
+  const generateGridData = () => {
+    const baseWidth = 320
+    const baseHeight = 280
+    const rowHeight = 450
+    const columnSpacing = 500 // Increased from 400 to 500 for wider spacing
+    const startX = 50 // Adjusted to accommodate wider spacing
+    const startY = 120
+    
+    const data = []
+    const itemsPerRow = 3
+    const totalRows = 3
+    const totalItems = itemsPerRow * totalRows // 9 items total
+    
+    let currentIndex = 0
+    
+    // Create 3 rows with 3 items each
+    for (let row = 0; row < totalRows; row++) {
+      const y = startY + (row * rowHeight)
+      
+      for (let col = 0; col < itemsPerRow; col++) {
+        const x = startX + (col * columnSpacing)
+        
+        // Use consistent sizes for perfect grid alignment
+        const w = baseWidth
+        const h = baseHeight
+        
+        data.push({x, y, w, h})
+        currentIndex++
+      }
+    }
+    
+    return data
+  }
+  
+  // Create extended sources for the grid - drawing page already has 11 items, more than 9
+  const createExtendedSources = () => {
+    const totalItems = 9 // 3x3 grid
+    // For drawing page, we have 11 items, so we'll take the first 9
+    return sources.slice(0, totalItems)
+  }
+  
+  const extendedSources = createExtendedSources()
 
-  const originalSize = {w: 1522, h: 1238}
+  const data = generateGridData()
+  const originalSize = {w: 1500, h: 1400} // Increased both width and height for wider spacing between grid repetitions
 
   useEffect(() => {
     // Set CSS custom property for responsive width
@@ -61,7 +92,7 @@ export default function DrawingPage() {
       <Header />
       <section id="hero">
         <InfiniteGrid 
-          sources={sources}
+          sources={extendedSources}
           data={data}
           originalSize={originalSize}
         />

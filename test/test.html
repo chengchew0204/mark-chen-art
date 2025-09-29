@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Brush Stroke Reveal — SVG Mask + GSAP-style Animation (No CDN)</title>
+    <style>
+  :root{
+    --bg:#0f0f12;
+    --ink:#ffffff;
+    --panel:#111722cc;
+    --panel-border:#2b3245;
+    --accent:#6ee7ff;
+    --text:#ebf0ff;
+    --muted:#a7b0c2;
+  }
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font:16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    overflow:hidden;
+  }
+
+  /* Stage */
+  .stage{
+    position:fixed; inset:0;
+    display:grid; place-items:center;
+  }
+
+  /* Background image (hidden via mask initially) */
+  .backdrop{
+    position:absolute; inset:0;
+    background-image:radial-gradient(60% 60% at 70% 30%, #163a3f 0%, #0d131a 38%, #090a0f 68%),
+                     url('data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%230c1a2b"/><stop offset="1" stop-color="%231a2540"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23g)"/><g opacity="0.18" fill="none" stroke="%238fd6ff" stroke-width="1"><path d="M0 740 C300 680 700 820 1000 760 S1400 680 1600 740"/><path d="M0 640 C320 580 700 760 980 700 S1400 620 1600 640" opacity="0.7"/><path d="M0 540 C340 480 700 700 960 620 S1400 560 1600 540" opacity="0.4"/></g></svg>');
+    background-size:cover; background-position:center;
+    mask: url(#revealMask);
+    -webkit-mask: url(#revealMask);
+    /* Fallback if the UA requires explicit reference on WebKit */
+    mask-mode: alpha;
+  }
+
+  /* Foreground headline, also revealed by the same mask so it appears only when painted */
+  .headline{
+    position:relative;
+    z-index:1;
+    text-align:center;
+    padding:2vw 4vw;
+    mix-blend-mode:screen;
+    text-shadow: 0 2px 14px #0009, 0 0 42px #0ae6ff26;
+    mask: url(#revealMask);
+    -webkit-mask: url(#revealMask);
+  }
+  .headline h1{
+    margin:0;
+    font-weight:800;
+    letter-spacing:0.02em;
+    font-size: clamp(28px, 8vw, 88px);
+  }
+  .headline p{
+    margin:.75rem 0 0;
+    color:#d7e4ff;
+    font-size: clamp(14px, 2.2vw, 22px);
+    opacity:.9;
+  }
+
+  /* SVG overlay used only for the mask and for a preview “ink” layer (optional) */
+  svg#mask-svg{
+    position:absolute; inset:0; width:100%; height:100%;
+    pointer-events:none;
+  }
+
+  /* Optional on-canvas ink preview so users can see strokes as they paint. */
+  .ink{
+    position:absolute; inset:0; pointer-events:none;
+    mix-blend-mode:lighten;
+  }
+
+  /* Control panel */
+  .panel{
+    position:fixed; top:14px; right:14px; z-index:9;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    backdrop-filter:saturate(1.1) blur(8px);
+    box-shadow: 0 6px 18px #0008, inset 0 1px 0 #ffffff14;
+    border-radius:12px;
+    padding:10px 12px;
+    width:min(320px, 90vw);
+    color:var(--text);
+    font-size:13px;
+  }
+  .panel h3{
+    margin:0 0 8px; font-size:13px; font-weight:700; letter-spacing:.04em; color:#d6e8ff; display:flex; align-items:center; gap:6px;
+  }
+  .panel h3::after{
+    content:"Brush Controls";
+  }
+  .row{ display:grid; grid-template-columns: 1fr auto; align-items:center; gap:8px; margin:8px 0;}
+  .row label{ color:var(--muted); }
+  .row input[type="range"]{
+    width: 170px;
+  }
+  .row output{
+    color:#cfe6ff; min-width:3ch; text-align:right; font-variant-numeric: tabular-nums;
+  }
+  .row .btn{
+    grid-column: 1 / -1;
+    margin-top:6px;
+  }
+  .btn{
+    appearance:none; -webkit-appearance:none;
+    background:linear-gradient(#0ea5b654,#0ea5b62a);
+    border:1px solid #57d7ff66;
+    color:#e9fbff;
+    padding:8px 10px;
+    border-radius:10px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .btn:active{ transform:translateY(1px) }
+
+  /* Reduced motion: instantly show content and hide ink preview */
+        @media (prefers-reduced-motion: reduce) {
+    .ink, svg#mask-svg { display:none !important; }
+    .backdrop, .headline { mask:none !important; -webkit-mask:none !important; }
+  }
+
+  /* Small “hint” footer */
+  .hint{
+    position:fixed; left:14px; bottom:14px; z-index:1;
+    font-size:12px; color:#9db2ce; opacity:.8;
+        }
+    </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <div class="backdrop" aria-hidden="true"></div>
+    <div class="headline" aria-live="polite">
+      <h1>Emergence in Motion</h1>
+      <p>Brush-painted reveal using SVG masks, turbulence and a GSAP-style timeline.</p>
+        </div>
+
+    <!-- SVG used solely to host the mask/filter definitions and (optionally) the preview ink strokes -->
+    <svg id="mask-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Brush mask">
+            <defs>
+        <!-- Roughen edges using turbulence + displacement; parameters are updated in JS -->
+        <filter id="roughen">
+          <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="2" result="noise"/>
+          <feDisplacementMap id="disp" in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+                </filter>
+
+        <!-- Subtle feathering for mask edges; updated via stdDeviation -->
+        <filter id="feather">
+          <feGaussianBlur id="blur" stdDeviation="0.8" edgeMode="duplicate"/>
+                </filter>
+
+        <!-- The luminance mask that will reveal the page.
+             Black = hidden, White = revealed. We start with black rect, then paint white strokes. -->
+        <mask id="revealMask" maskContentUnits="userSpaceOnUse">
+          <rect id="maskBg" x="0" y="0" width="100%" height="100%" fill="black"/>
+          <g id="maskStrokes" filter="url(#feather)">
+            <!-- JS will populate multiple jittered stroke paths here; fill/stroke = white -->
+          </g>
+        </mask>
+            </defs>
+
+      <!-- Optional on-canvas ink preview layer (so you see where the strokes move) -->
+      <g id="ink" class="ink" filter="url(#roughen)" opacity="0.95" pointer-events="none">
+        <!-- JS will mirror the same paths here with a demo strokeColor -->
+      </g>
+        </svg>
+    </div>
+
+  <!-- Controls -->
+  <div class="panel" aria-controls="stage" aria-label="Brush settings panel">
+    <h3></h3>
+    <div class="row">
+      <label for="strokeWidth">Stroke Width</label>
+      <input id="strokeWidth" type="range" min="12" max="240" step="2" value="120" />
+      <output id="outWidth">120</output>
+    </div>
+    <div class="row">
+      <label for="strokeSpeed">Stroke Speed</label>
+      <input id="strokeSpeed" type="range" min="0.2" max="3.0" step="0.05" value="1.0" />
+      <output id="outSpeed">1.0</output>
+        </div>
+    <div class="row">
+      <label for="bristle">Bristle Roughness</label>
+      <input id="bristle" type="range" min="0" max="18" step="0.5" value="6" />
+      <output id="outBristle">6</output>
+        </div>
+    <div class="row">
+      <label for="feather">Edge Feather</label>
+      <input id="feather" type="range" min="0" max="4" step="0.1" value="0.8" />
+      <output id="outFeather">0.8</output>
+        </div>
+    <div class="row">
+      <button class="btn" id="replayBtn" type="button">Replay</button>
+    </div>
+  </div>
+
+  <div class="hint">Tip: adjust sliders, then press Replay.</div>
+
+    <script type="module">
+/**
+ * Self-contained demo with:
+ *  - SVG mask + roughened edges via turbulence and displacement
+ *  - GSAP-like tiny tween engine (enough for this demo): gsap.to / gsap.timeline
+ *  - Configurable strokes defined as viewport-percentage segments
+ *  - Reduced-motion accessibility
+ *  - HiDPI- and resize-safe recomputation
+ *
+ * NOTE: This file does not load GSAP from a CDN to stay self-contained. Instead,
+ * we provide a tiny GSAP-compatible subset sufficient for this demo. If you
+ * have real GSAP available, drop it in and it will override this shim.
+ */
+
+/* ----------------------------- Config ----------------------------- */
+const CONFIG = {
+  strokeColor: "#4ee0ff",            // Preview ink color (not the mask)
+  strokeWidth: 120,                  // Base stroke width in px
+  strokeSpeed: 1.0,                  // Multiplier: higher = faster
+  bristleRoughness: 6,               // Displacement scale for roughness
+  edgeFeather: 0.8,                  // Gaussian blur stdDeviation on the mask
+  direction: "left-to-right",        // "left-to-right" | "right-to-left" | "top-to-bottom"
+  // Array of stroke segments: start/end in viewport percentages (0..100)
+  // You can provide any number of strokes; each will animate sequentially.
+  strokes: [
+    { start: {x: 8,  y: 38}, end: {x: 92, y: 42} },
+    { start: {x: 10, y: 55}, end: {x: 90, y: 58} },
+    { start: {x: 12, y: 70}, end: {x: 88, y: 72} }
+  ]
+};
+
+/* ------------------------ Reduced Motion Check ------------------------ */
+const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (prefersReduced) {
+  // Immediately reveal by removing mask
+  document.querySelectorAll(".backdrop, .headline").forEach(el=>{
+    el.style.webkitMask = "none";
+    el.style.mask = "none";
+  });
+}
+
+/* ----------------------------- DOM refs ----------------------------- */
+const svg         = document.getElementById("mask-svg");
+const gMask       = document.getElementById("maskStrokes");
+const gInk        = document.getElementById("ink");
+const turb        = document.getElementById("turb");
+const disp        = document.getElementById("disp");
+const blur        = document.getElementById("blur");
+
+const ui = {
+  strokeWidth: document.getElementById("strokeWidth"),
+  strokeSpeed: document.getElementById("strokeSpeed"),
+  bristle:     document.getElementById("bristle"),
+  feather:     document.getElementById("feather"),
+  outWidth:    document.getElementById("outWidth"),
+  outSpeed:    document.getElementById("outSpeed"),
+  outBristle:  document.getElementById("outBristle"),
+  outFeather:  document.getElementById("outFeather"),
+  replay:      document.getElementById("replayBtn")
+};
+
+/* ------------------------ Mini GSAP (tiny shim) ------------------------ */
+/**
+ * This micro-tween exposes:
+ *  - gsap.to(target, {duration, ease, delay, onUpdate, onComplete, ...props})
+ *  - gsap.timeline(): { to(target, vars), add(fn), play() }
+ * For this demo we only animate numeric properties and CSS/SVG styles.
+ */
+const EASE = {
+  power3Out: t => 1 - Math.pow(1 - t, 3),
+  power2InOut: t => (t<.5? 2*t*t : 1 - Math.pow(-2*t+2,2)/2),
+  linear: t => t
+};
+function now(){ return performance.now() }
+function clamp(n,min,max){ return Math.min(max, Math.max(min, n)) }
+function lerp(a,b,t){ return a + (b-a)*t }
+
+function parseUnit(val){
+  if (typeof val === "number") return {n:val, u:""};
+  const m = /^(-?\d+(\.\d+)?)([a-z%]*)$/i.exec(String(val).trim());
+  return m ? {n:parseFloat(m[1]), u:m[3]||""} : {n:0, u:""};
+}
+function setProp(target, key, value){
+  // Handle attributes vs styles vs direct props
+  if (target instanceof SVGElement && key in target) {
+    target[key] = value;
+  } else if (key in target.style) {
+    target.style[key] = value;
+  } else if (target.setAttribute) {
+    target.setAttribute(key, value);
+  } else {
+    target[key] = value;
+  }
+}
+function getProp(target, key){
+  if (target instanceof SVGElement && target.hasAttribute(key)) {
+    return target.getAttribute(key);
+  }
+  if (key in target.style) {
+    return getComputedStyle(target)[key];
+  }
+  if (key in target) return target[key];
+  return target.getAttribute ? target.getAttribute(key) : 0;
+}
+
+class Tween {
+  constructor(target, vars){
+    this.t0 = (now() + ((vars.delay||0)*1000));
+    this.dur = (vars.duration||0.6) * 1000;
+    this.ease = typeof vars.ease === "function" ? vars.ease :
+                (EASE[vars.ease] || EASE.power3Out);
+    this.onUpdate = vars.onUpdate;
+    this.onComplete = vars.onComplete;
+    this.target = target;
+    this.keys = [];
+    this.from = {};
+    this.to = {};
+    // Build animatable properties list
+    for (const k in vars){
+      if (["duration","ease","delay","onUpdate","onComplete"].includes(k)) continue;
+      const to = parseUnit(vars[k]);
+      const cur = parseUnit(getProp(target, k) ?? 0);
+      this.keys.push(k);
+      this.from[k] = cur;
+      this.to[k]   = to;
+    }
+    this.done = false;
+  }
+  step(tms){
+    if (this.done) return true;
+    if (tms < this.t0) return false;
+    const prog = clamp((tms - this.t0) / this.dur, 0, 1);
+    const e = this.ease(prog);
+    for (const k of this.keys){
+      const f = this.from[k], to = this.to[k];
+      const v = lerp(f.n, to.n, e) + (to.u || f.u || "");
+      setProp(this.target, k, v);
+    }
+    this.onUpdate && this.onUpdate(e, prog);
+    if (prog >= 1){
+      this.onComplete && this.onComplete();
+      this.done = true;
+      return true;
+    }
+    return false;
+  }
+}
+
+class Timeline {
+  constructor(){ this._items=[]; this._time=0; this._playing=false; }
+  to(target, vars){
+    // Chain sequentially by default
+    const startDelay = (vars.delay||0) + this._time;
+    const t = new Tween(target, {...vars, delay:startDelay});
+    this._items.push(t);
+    this._time += (vars.duration||0.6) + (vars.delay||0);
+    return this;
+  }
+  add(fn, delay=0){
+    // Allow adding a callback at a specific point
+    const t = new Tween({dummy:0}, {duration:0, delay:(this._time+delay), onComplete:fn});
+    this._items.push(t);
+    return this;
+  }
+  play(){
+    if (this._playing) return this;
+    this._playing = true;
+    const items = this._items;
+    const loop = () => {
+      if (!this._playing) return;
+      const t = now();
+      let allDone = true;
+      for (const tw of items){
+        if (!tw.step(t)) allDone = false;
+      }
+      if (!allDone){
+        requestAnimationFrame(loop);
+      } else {
+        this._playing = false;
+      }
+    };
+    requestAnimationFrame(loop);
+    return this;
+  }
+  clear(){ this._items.length=0; this._time=0; }
+}
+const gsap = window.gsap || {
+  to:(target,vars)=>new Tween(target,vars),
+  timeline:()=>new Timeline(),
+  easing:EASE
+};
+/* ---------------------- End of tiny GSAP shim ---------------------- */
+
+
+/* ----------------------- Brush Path Generation ----------------------- */
+/**
+ * Create a curved path between two points with slight wobble and jitter,
+ * then clone offsets to simulate bristle edges. We also animate stroke-dashoffset.
+ */
+function makeStrokeGroup(fromPt, toPt, baseWidth, color, forMask=true){
+  const group = document.createElementNS("http://www.w3.org/2000/svg","g");
+  const nClones = 6; // number of offset clones to simulate multiple bristles
+  const jitter = baseWidth * 0.06; // lateral jitter for clones
+
+  // Main control points (cubic Bezier)
+  const dx = toPt.x - fromPt.x;
+  const dy = toPt.y - fromPt.y;
+  const len = Math.hypot(dx, dy);
+  const nx = dx / (len || 1), ny = dy / (len || 1);
+  const perpX = -ny, perpY = nx;
+
+  // Curvature factor
+  const curve = clamp(len * 0.15, 10, 160);
+  const c1 = { x: fromPt.x + dx*0.33 + perpX*curve, y: fromPt.y + dy*0.33 + perpY*curve };
+  const c2 = { x: fromPt.x + dx*0.66 - perpX*curve*0.6, y: fromPt.y + dy*0.66 - perpY*curve*0.6 };
+
+  // Helper to construct a slightly perturbed path data string
+  function buildD(offset){
+    const j1 = (Math.random()-0.5)*jitter*2 + offset;
+    const j2 = (Math.random()-0.5)*jitter*2 + offset;
+    const j3 = (Math.random()-0.5)*jitter*2 + offset;
+    return `M ${fromPt.x + perpX*j1},${fromPt.y + perpY*j1}
+            C ${c1.x + perpX*j2},${c1.y + perpY*j2}
+              ${c2.x + perpX*j3},${c2.y + perpY*j3}
+              ${toPt.x + perpX*offset},${toPt.y + perpY*offset}`;
+  }
+
+  for (let i=0; i<nClones; i++){
+    const t = (i/(nClones-1) - 0.5) * 2; // -1..1
+    const w = baseWidth * (0.88 + 0.24*Math.random()) * (1 - 0.08*Math.abs(t));
+    const d = buildD(t * jitter);
+
+    const p = document.createElementNS("http://www.w3.org/2000/svg","path");
+    p.setAttribute("d", d);
+    p.setAttribute("fill","none");
+    p.setAttribute("stroke", forMask ? "white" : color);
+    p.setAttribute("stroke-linecap","round");
+    p.setAttribute("stroke-linejoin","round");
+    p.setAttribute("stroke-width", w.toFixed(2));
+
+    // Subtle opacity falloff toward the outer bristles on the preview ink
+    if (!forMask){
+      p.setAttribute("opacity", (0.85 - 0.55*Math.abs(t)).toFixed(3));
+    }
+
+    // Add roughening filter to ink preview; mask gets feather separately
+    if (!forMask){
+      p.setAttribute("filter","url(#roughen)");
+    }
+
+    group.appendChild(p);
+  }
+  return group;
+}
+
+/* ------------------------ Coordinate Utilities ------------------------ */
+function vp(pctX, pctY){
+  const {width, height} = svg.getBoundingClientRect();
+  return {
+    x: pctX/100 * width,
+    y: pctY/100 * height
+  };
+}
+function resolveDirectional(fromPct, toPct, direction){
+  // Allow direction override for vertical sweeps
+  if (direction === "right-to-left") return [toPct, fromPct];
+  if (direction === "top-to-bottom"){
+    // Force vertical movement by aligning X and swapping Y if needed
+    const x = (fromPct.x + toPct.x)/2;
+    return [{x, y: fromPct.y}, {x, y: toPct.y}];
+  }
+  return [fromPct, toPct]; // left-to-right default
+}
+
+/* --------------------------- Stroke Builder --------------------------- */
+let tl; // timeline instance
+let pathsMask = [];
+let pathsInk  = [];
+
+function clearStrokes(){
+  gMask.replaceChildren();
+  gInk.replaceChildren();
+  pathsMask = [];
+  pathsInk = [];
+}
+
+function buildStrokes(){
+  clearStrokes();
+  const W = CONFIG.strokeWidth;
+  CONFIG.strokes.forEach(seg=>{
+    const [sPct, ePct] = resolveDirectional(seg.start, seg.end, CONFIG.direction);
+    const s = vp(sPct.x, sPct.y);
+    const e = vp(ePct.x, ePct.y);
+
+    const groupMask = makeStrokeGroup(s, e, W, CONFIG.strokeColor, true);
+    const groupInk  = makeStrokeGroup(s, e, W, CONFIG.strokeColor, false);
+
+    gMask.appendChild(groupMask);
+    gInk.appendChild(groupInk);
+
+    // Collect individual paths inside each group to animate dashoffset
+    pathsMask.push(...groupMask.querySelectorAll("path"));
+    pathsInk.push(...groupInk.querySelectorAll("path"));
+  });
+
+  // Ensure mask feather and roughness reflect current settings
+  disp.setAttribute("scale", String(CONFIG.bristleRoughness));
+  blur.setAttribute("stdDeviation", String(CONFIG.edgeFeather));
+}
+
+/* ---------------------------- Stroke Animate ---------------------------- */
+function animateStrokes(){
+  if (prefersReduced) return;
+
+  // Reset turbulence motion wobble
+  let wobbleStart = now();
+  let wobbleRAF;
+  const wobble = () => {
+    const t = (now() - wobbleStart)/1000;
+    // Slight time-varying turbulence for organic wobble
+    const base = 0.65 + 0.25*Math.sin(t*0.9);
+    turb.setAttribute("baseFrequency", base.toFixed(3));
+    wobbleRAF = requestAnimationFrame(wobble);
+  };
+  wobbleRAF = requestAnimationFrame(wobble);
+
+  // Build a sequential timeline animating dashoffset along each path
+  tl && tl.clear();
+  tl = gsap.timeline();
+  const speed = CONFIG.strokeSpeed; // higher = faster
+
+  // For each path, compute its length and animate dash
+  [...pathsMask.keys()].forEach((idx)=>{
+    const pm = pathsMask[idx];
+    const pi = pathsInk[idx];
+    const L  = pm.getTotalLength();
+
+    pm.setAttribute("stroke-dasharray", `${L}`);
+    pm.setAttribute("stroke-dashoffset", `${L}`);
+    pi.setAttribute("stroke-dasharray", `${L}`);
+    pi.setAttribute("stroke-dashoffset", `${L}`);
+
+    const dur = clamp((L / 900) / speed, 0.18, 1.2); // normalized duration by length
+    tl.to(pm, {
+      duration: dur,
+      ease: "power2InOut",
+      // Animate mask first; keep ink in near lockstep with slight delay to simulate wet edge
+      onUpdate: (e)=>{
+        const val = (1-e) * L;
+        pm.setAttribute("stroke-dashoffset", `${val}`);
+      }
+    }).to(pi, {
+      duration: Math.max(dur*0.92, 0.12),
+      ease: "power2InOut",
+      delay: -Math.min(0.06, dur*0.25),
+      onUpdate: (e)=>{
+        const val = (1-e) * L;
+        pi.setAttribute("stroke-dashoffset", `${val}`);
+      }
+    }, "-=0.0");
+  });
+
+  // Stop wobble when the sequence finishes
+  tl.add(()=>{
+    cancelAnimationFrame(wobbleRAF);
+    turb.setAttribute("baseFrequency", "0.9"); // settle
+  }, 0.0).play();
+}
+
+/* --------------------------- UI Wiring --------------------------- */
+function applyUI(){
+  CONFIG.strokeWidth       = parseInt(ui.strokeWidth.value,10);
+  CONFIG.strokeSpeed       = parseFloat(ui.strokeSpeed.value);
+  CONFIG.bristleRoughness  = parseFloat(ui.bristle.value);
+  CONFIG.edgeFeather       = parseFloat(ui.feather.value);
+
+  ui.outWidth.value   = CONFIG.strokeWidth;
+  ui.outSpeed.value   = CONFIG.strokeSpeed.toFixed(2).replace(/0+$/,'').replace(/\.$/,'');
+  ui.outBristle.value = CONFIG.bristleRoughness;
+  ui.outFeather.value = CONFIG.edgeFeather;
+
+  buildStrokes();
+}
+
+ui.strokeWidth.addEventListener("input", ()=> { applyUI(); });
+ui.strokeSpeed.addEventListener("input", ()=> { applyUI(); });
+ui.bristle.addEventListener("input", ()=> {
+  disp.setAttribute("scale", ui.bristle.value);
+  ui.outBristle.value = ui.bristle.value;
+});
+ui.feather.addEventListener("input", ()=>{
+  blur.setAttribute("stdDeviation", ui.feather.value);
+  ui.outFeather.value = ui.feather.value;
+});
+
+ui.replay.addEventListener("click", ()=>{
+  // Rebuild (so jitter re-randomizes) and reanimate
+  applyUI();
+  animateStrokes();
+});
+
+/* --------------------------- Resize Handling --------------------------- */
+let resizeRAF;
+window.addEventListener("resize", ()=>{
+  cancelAnimationFrame(resizeRAF);
+  resizeRAF = requestAnimationFrame(()=>{
+    applyUI();
+    animateStrokes();
+                    });
+                });
+
+/* --------------------------- Init --------------------------- */
+function init(){
+  // Set initial control values from CONFIG
+  ui.strokeWidth.value = CONFIG.strokeWidth;
+  ui.strokeSpeed.value = CONFIG.strokeSpeed;
+  ui.bristle.value     = CONFIG.bristleRoughness;
+  ui.feather.value     = CONFIG.edgeFeather;
+  ui.outWidth.value    = CONFIG.strokeWidth;
+  ui.outSpeed.value    = CONFIG.strokeSpeed;
+  ui.outBristle.value  = CONFIG.bristleRoughness;
+  ui.outFeather.value  = CONFIG.edgeFeather;
+
+  // Initial paint
+  applyUI();
+  animateStrokes();
+}
+init();
+
+/* --------------------------- Public API (optional) ---------------------------
+ * You can tweak at runtime from DevTools:
+ *   window.BrushDemo.setConfig({ strokeWidth: 160, direction: "top-to-bottom" })
+ *   window.BrushDemo.replay()
+ */
+window.BrushDemo = {
+  setConfig(patch){
+    Object.assign(CONFIG, patch||{});
+    applyUI();
+    animateStrokes();
+  },
+  replay(){
+    applyUI();
+    animateStrokes();
+  }
+};
+    </script>
+</body>
+</html>
